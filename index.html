@@ -114,8 +114,8 @@ const SEASON={0:["Cl\u00e9mentine","Endive","Poireau","Kiwi","Orange"],2:["Asper
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const seas=(SEASON[Math.floor(new Date().getMonth()/2)*2])||[];
 const LS={get:function(k,fb){try{var v=localStorage.getItem("mc_"+k);return v?JSON.parse(v):fb}catch(e){return fb}},set:function(k,v){try{localStorage.setItem("mc_"+k,JSON.stringify(v))}catch(e){}}};
-const APP_VERSION="3.0";
-const NEWS="Version 3.0 :\n\uD83C\uDFE0 Accueil am\u00e9lior\u00e9 + r\u00e9sum\u00e9 planning\n\uD83D\uDCC5 Planning : cr\u00e9er repas custom + nb personnes\n\uD83D\uDCCB Historique : ouvrir, swipe, menu 3 points\n\uD83E\uDDD1\u200D\uD83C\uDF73 Chef voit ta liste + J'ai faim\n\uD83D\uDD12 Connexion auto\n\uD83C\uDF73 +15 nouvelles recettes simples\n\u2699\uFE0F Param\u00e8tres simplifi\u00e9s\n\uD83D\uDC51 Profil R : mode boss !";
+const APP_VERSION="3.1";
+const NEWS="V3.1: Splash perso | Giacomo pour R | Chat optimise | PIN modifiable -- V3.0: Accueil + Planning + Historique + Chef IA + 30 recettes + Profil R -- V2.0: 4 profils + 966 produits + Chef Nutri"
 
 function Confetti(props){if(!props.active)return null;var p=Array.from({length:50},function(_,i){return{id:i,left:Math.random()*100,dl:Math.random()*0.5,c:["#FF6B6B","#4ECDC4","#45B7D1","#FFA726","#AB47BC","#66BB6A"][i%6],sz:6+Math.random()*6}});return h("div",{style:{position:"fixed",top:0,left:0,right:0,bottom:0,pointerEvents:"none",zIndex:9999}},p.map(function(x){return h("div",{key:x.id,style:{position:"absolute",top:-10,left:x.left+"%",width:x.sz,height:x.sz*1.5,backgroundColor:x.c,borderRadius:2,animation:"cf 2.5s ease-in "+x.dl+"s forwards"}})}))}
 
@@ -198,7 +198,7 @@ _e(function(){
       {id:uid(),name:"N",pin:"21",av:"❤️",color:"#E91E63",cn:"Chef Nutri",cs:"doux"},
       {id:uid(),name:"Z",pin:"",av:"✨",color:"#AB47BC",cn:"Chef Sarton",cs:"drole"},
       {id:uid(),name:"C",pin:"",av:"💪",color:"#4CAF50",cn:"Chef Sarton",cs:"drole"},
-      {id:uid(),name:"R",pin:"13",av:"👑",color:"#004170",cn:"Chef Nutri",cs:"boss"}
+      {id:uid(),name:"R",pin:"13",av:"👑",color:"#004170",cn:"Giacomo",cs:"boss"}
     ];
     ls=ps.map(function(p){return{id:uid(),pid:p.id,name:"Ma liste"}});ch=true;
   }else{
@@ -211,7 +211,7 @@ _e(function(){
   var lp=LS.get("lp",null);
   if(lp){var found=ps.find(function(p){return p.id===lp.id});if(found){scp(found);var ll=ls.find(function(l){return l.pid===found.id});scl(ll||null);
     // Splash 3 times
-    if(SPLASHES[found.name]){var sc=LS.get("sc_"+found.id,0);if(sc<3){ssplash(SPLASHES[found.name]);setTimeout(function(){ssplash(null)},5000);LS.set("sc_"+found.id,sc+1)}}
+    if(SPLASHES[found.name]){ssplash(SPLASHES[found.name]);setTimeout(function(){ssplash(null)},5000)}
   }}
   // News
   if(LS.get("nv","")!==APP_VERSION){ssNws(true);LS.set("nv",APP_VERSION)}
@@ -232,13 +232,13 @@ var notify=function(m,t){snotif({m:m,t:t||"info"});setTimeout(function(){snotif(
 
 var loginProf=function(p){
   scp(p);LS.set("lp",p);var l=lists.find(function(x){return x.pid===p.id});scl(l||null);
-  if(SPLASHES[p.name]){var sc=LS.get("sc_"+p.id,0);if(sc<3){ssplash(SPLASHES[p.name]);setTimeout(function(){ssplash(null)},5000);LS.set("sc_"+p.id,sc+1)}}
+  if(SPLASHES[p.name]){ssplash(SPLASHES[p.name]);setTimeout(function(){ssplash(null)},5000)}
   if(!LS.get("tuto_"+p.id)){ssTut(true);LS.set("tuto_"+p.id,true)}
   var msgs=LS.get("ch_"+p.id,[]);
   if(msgs.length===0){
     var greet="";
     if(p.name==="Z"||p.name==="C")greet="Wesh le sang ! 🔥 Si t'as besoin je suis là n'hésite pas ! Pose n'importe quelle question 💪";
-    else if(p.name==="R")greet="Yo patron ! 👑 Moi c'est ton chef perso. Je suis mieux que Papa Inshape, boss. Demande-moi ce que tu veux tu verras 💪🔥";
+    else if(p.name==="R")greet="Yo patron ! 👑 Moi c'est Giacomo, ton chef perso. Je suis mieux que Papa Inshape boss, demande-moi ce que tu veux tu verras 💪🔥";
     if(greet)LS.set("ch_"+p.id,[{role:"model",text:greet,ts:Date.now()}]);
   }
 };
@@ -276,7 +276,7 @@ var doQA=function(){if(!qAdd.trim()||!cl)return;var names=qAdd.split(",").map(fu
 var cName=cp?cp.cn||"Chef Nutri":"Chef Nutri";
 var buildP=function(){var st=cp?cp.cs||"cool":"cool";
   var tones={cool:"Tutoie, chaleureux.",coach:"Direct, motivant.",doux:"Très doux, patient.",drole:"Drôle, verlan, familier.",boss:"Tu parles au BOSS. Respectueux mais tu sais qu'il gère. Appelle-le patron/boss."};
-  var p="Tu es "+cName+", expert cuisine/nutrition/coaching. STYLE: "+(tones[st]||tones.cool)+"\nCompétences: Recettes (calories+macros/portion), plans repas, coaching sport+alimentation, Ramadan/jeûne, alternatives, étiquettes nutritionnelles.\nSi 'j ai faim' → propose rapide avec la liste.\nSi 'merci chef' → réponse drôle.\nToujours français. Complet. Émojis.\nFin: [SUGGESTIONS]\\n- Q1\\n- Q2";
+  var p="Tu es "+cName+". STYLE:"+(tones[st]||tones.cool)+" Expert cuisine/nutrition/coaching. Calories+macros par recette. Français. Émojis. Fin:[SUGGESTIONS]\\n- Q1\\n- Q2";
   if(mem.length>0)p+="\n\nMÉMOIRE:\n"+mem.map(function(m){return"- "+m}).join("\n");
   if(cl&&lI.length>0)p+="\n\n🛒 Liste: "+lI.slice(0,25).map(function(i){return i.name}).join(", ");
   return p};
@@ -289,10 +289,10 @@ var sendC=function(msg){
   var um={role:"user",text:txt,ts:Date.now()};var nm=[].concat(cMsg,[um]);scMsg(nm);scIn("");scLd(true);
   if(exMem(txt))notify("💾 Mémorisé !");
   var models=["gemini-2.5-flash","gemini-2.0-flash","gemini-2.0-flash-lite"];
-  var contents=nm.filter(function(m){return m.role==="user"||m.role==="model"}).slice(-20).map(function(m){return{role:m.role==="user"?"user":"model",parts:[{text:m.text||"..."}]}});
+  var contents=nm.filter(function(m){return m.role==="user"||m.role==="model"}).slice(-8).map(function(m){return{role:m.role==="user"?"user":"model",parts:[{text:m.text||"..."}]}});
   var tryModels=function(idx){
     if(idx>=models.length){scMsg(function(p){return[].concat(p,[{role:"model",text:"❌ Aucun modèle. Vérifie clé ⚙️",ts:Date.now()}])});scLd(false);return}
-    fetch("https://generativelanguage.googleapis.com/v1beta/models/"+models[idx]+":generateContent?key="+apiK,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({system_instruction:{parts:[{text:buildP()}]},contents:contents,generationConfig:{maxOutputTokens:8192,temperature:0.8}})}).then(function(res){
+    fetch("https://generativelanguage.googleapis.com/v1beta/models/"+models[idx]+":generateContent?key="+apiK,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({system_instruction:{parts:[{text:buildP()}]},contents:contents,generationConfig:{maxOutputTokens:4096,temperature:0.8}})}).then(function(res){
       if(res.ok)return res.json().then(function(data){
         var raw=data.candidates&&data.candidates[0]&&data.candidates[0].content&&data.candidates[0].content.parts&&data.candidates[0].content.parts[0]?data.candidates[0].content.parts[0].text:"";
         if(!raw){scMsg(function(p){return[].concat(p,[{role:"model",text:"Pas de réponse",ts:Date.now()}])})}
