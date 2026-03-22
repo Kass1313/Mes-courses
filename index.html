@@ -384,7 +384,7 @@ const recipesTab=()=>{const fvR=allR.filter(r=>favR.includes(r.name));const dsp=
       newR.steps.map((st,i)=>h("div",{key:i,style:{fontSize:11,display:"flex",justifyContent:"space-between"}},h("span",null,(i+1)+". "+st),h("button",{onClick:()=>setNewR({...newR,steps:newR.steps.filter((_,j)=>j!==i)}),style:{background:"none",border:"none",color:"#E53935",cursor:"pointer"}},"✕"))),
       h("div",{style:{display:"flex",gap:3,marginTop:4}},h("input",{style:{...s.inp,flex:1},placeholder:"Étape...",value:newStep,onChange:e=>setNewStep(e.target.value),onKeyDown:e=>{if(e.key==="Enter"&&newStep.trim()){setNewR({...newR,steps:[...newR.steps,newStep.trim()]});setNewStep("")}}}),h("button",{onClick:()=>{if(newStep.trim()){setNewR({...newR,steps:[...newR.steps,newStep.trim()]});setNewStep("")}},style:s.btn(T.accent)},"+")
       ),
-      h("button",{style:{...s.btn("#4CAF50"),width:"100%",marginTop:8},onClick:()=>{if(!newR.name||!newR.ingredients.length)return;persist(undefined,undefined,undefined,[...customR,{...newR}]);setNewR({name:"",emoji:"🍽️",cat:"🍽️ Déjeuner",servings:4,ingredients:[],steps:[]});setShowNewR(false);notify("🍳 Créée !")}},"Sauvegarder")))};
+      h("button",{style:{...s.btn("#4CAF50"),width:"100%",marginTop:8},onClick:()=>{if(!newR.name||!newR.ingredients.length)return;const saved={...newR};persist(undefined,undefined,undefined,[...customR,saved]);setNewR({name:"",emoji:"X",cat:RCATS[1],servings:4,ingredients:[],steps:[]});setShowNewR(false);notify("Recette ajoutee !")}},"Sauvegarder")))};
 
 // ═══ CHAT ═══
 const chatTab=()=>h("div",{style:{display:"flex",flexDirection:"column",height:"calc(100vh - 130px)"}},
