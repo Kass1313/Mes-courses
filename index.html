@@ -368,7 +368,7 @@ const recipesTab=()=>{const fvR=allR.filter(r=>favR.includes(r.name));const dsp=
       [{id:"all",l:"Tout"},...RCATS.map(c=>({id:c,l:c}))].map(t=>h("button",{key:t.id,onClick:()=>setRCatF(t.id),style:{...s.btn(rCatF===t.id?T.accent:T.iBg,rCatF===t.id?"#FFF":T.text),fontSize:9,padding:"3px 6px",whiteSpace:"nowrap"}},t.l))),
     h("input",{style:{...s.inp,marginBottom:8},placeholder:"🔍 Chercher...",value:rS,onChange:e=>setRS(e.target.value)}),
     dR.map((r,i)=>h("div",{key:i,style:{...s.card,display:"flex",alignItems:"center",gap:8}},
-      h("div",{onClick:()=>{setRServ(r.servings);setShowRecipe(r)},style:{display:"flex",alignItems:"center",gap:8,flex:1,cursor:"pointer"}},h("span",{style:{fontSize:22}},r.emoji),h("div",null,h("div",{style:{fontWeight:700,fontSize:12}},r.name),h("div",{style:{fontSize:10,color:T.ts}},r.servings+"p"+(r.mp?" • "+r.mp+"%":"")+(ratings[r.name]?" • "+("⭐".repeat(ratings[r.name])):""))))),
+      h("div",{onClick:()=>{setRServ(r.servings);setShowRecipe(r)},style:{display:"flex",alignItems:"center",gap:8,flex:1,cursor:"pointer"}},h("span",{style:{fontSize:22}},r.emoji),h("div",null,h("div",{style:{fontWeight:700,fontSize:12}},r.name),h("div",{style:{fontSize:10,color:T.ts}},r.servings+"p"+(r.mp?" • "+r.mp+"%":"")))),
       h("button",{onClick:()=>{const nf=favR.includes(r.name)?favR.filter(x=>x!==r.name):[...favR,r.name];persist(undefined,undefined,undefined,undefined,nf)},style:{background:"none",border:"none",fontSize:14,cursor:"pointer"}},favR.includes(r.name)?"⭐":"☆"),
       customR.find(cr=>cr.name===r.name)&&h("button",{onClick:()=>persist(undefined,undefined,undefined,customR.filter(cr=>cr.name!==r.name)),style:{background:"none",border:"none",fontSize:12,cursor:"pointer",color:"#E53935"}},"✕"))),
     dR.length===0&&h("div",{style:{textAlign:"center",padding:20,color:T.ts}},"Aucune recette"),
@@ -384,7 +384,7 @@ const recipesTab=()=>{const fvR=allR.filter(r=>favR.includes(r.name));const dsp=
       newR.steps.map((st,i)=>h("div",{key:i,style:{fontSize:11,display:"flex",justifyContent:"space-between"}},h("span",null,(i+1)+". "+st),h("button",{onClick:()=>setNewR({...newR,steps:newR.steps.filter((_,j)=>j!==i)}),style:{background:"none",border:"none",color:"#E53935",cursor:"pointer"}},"✕"))),
       h("div",{style:{display:"flex",gap:3,marginTop:4}},h("input",{style:{...s.inp,flex:1},placeholder:"Étape...",value:newStep,onChange:e=>setNewStep(e.target.value),onKeyDown:e=>{if(e.key==="Enter"&&newStep.trim()){setNewR({...newR,steps:[...newR.steps,newStep.trim()]});setNewStep("")}}}),h("button",{onClick:()=>{if(newStep.trim()){setNewR({...newR,steps:[...newR.steps,newStep.trim()]});setNewStep("")}},style:s.btn(T.accent)},"+")
       ),
-      h("button",{style:{...s.btn("#4CAF50"),width:"100%",marginTop:8},onClick:()=>{if(!newR.name||!newR.ingredients.length)return;const saved={...newR};persist(undefined,undefined,undefined,[...customR,saved]);setNewR({name:"",emoji:"X",cat:RCATS[1],servings:4,ingredients:[],steps:[]});setShowNewR(false);notify("Recette ajoutee !")}},"Sauvegarder")))};
+      h("button",{style:{...s.btn("#4CAF50"),width:"100%",marginTop:8},onClick:function(){if(!newR.name||!newR.ingredients.length){return}var sv=Object.assign({},newR);persist(undefined,undefined,undefined,[].concat(customR,[sv]));setNewR({name:"",emoji:"",cat:RCATS[1],servings:4,ingredients:[],steps:[]});setShowNewR(false);notify("OK")}},"Sauvegarder")))};
 
 // ═══ CHAT ═══
 const chatTab=()=>h("div",{style:{display:"flex",flexDirection:"column",height:"calc(100vh - 130px)"}},
