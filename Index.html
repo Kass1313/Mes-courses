@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>🛒 Mes Courses</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:'Nunito','Segoe UI',sans-serif;overscroll-behavior:none;padding-bottom:70px}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#ccc;border-radius:4px}
+input,button,textarea,select{font-family:inherit}
+@keyframes sd{from{opacity:0;transform:translate(-50%,-20px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes cf{0%{top:-10px;opacity:1;transform:rotate(0)}100%{top:110vh;opacity:0;transform:rotate(720deg)}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes bounceCheck{0%{transform:scale(1)}30%{transform:scale(1.3)}60%{transform:scale(.9)}100%{transform:scale(1)}}
+@keyframes splashIn{0%{opacity:0;transform:scale(.7)}50%{transform:scale(1.05)}100%{opacity:1;transform:scale(1)}}
+@keyframes appOpen{0%{opacity:0;transform:scale(.9)}100%{opacity:1;transform:scale(1)}}
+.tdot{animation:blink 1.4s infinite;display:inline-block;width:8px;height:8px;border-radius:50%;margin:0 2px}
+.bounce{animation:bounceCheck .3s ease}
+.bottomNav{position:fixed;bottom:0;left:0;right:0;background:#FFF;border-top:1px solid #E8E0D8;display:flex;justify-content:space-around;padding:6px 0 env(safe-area-inset-bottom,8px);z-index:200;max-width:480px;margin:0 auto}
+.bottomNav.dark{background:#1A1A1A;border-color:#333}
+.navBtn{display:flex;flex-direction:column;align-items:center;gap:2px;border:none;background:none;cursor:pointer;padding:4px 8px;position:relative;min-width:44px}
+.navBtn .icon{font-size:20px;transition:transform .2s}
+.navBtn.active .icon{transform:scale(1.15)}
+.navBtn .label{font-size:9px;font-weight:600;color:#AAA;transition:color .2s}
+.navBtn.active .label{font-weight:800}
+.navBtn .dot{width:4px;height:4px;border-radius:50%;position:absolute;bottom:2px;opacity:0;transition:opacity .2s}
+.navBtn.active .dot{opacity:1}
+.navBadge{position:absolute;top:0;right:4px;background:#E53935;color:#FFF;font-size:8px;font-weight:800;padding:1px 4px;border-radius:10px;min-width:14px;text-align:center}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script type="text/babel">
+const{useState,useEffect,useRef,useMemo}=React;
+const h=React.createElement;
+
+// ═══════ DATA ═══════
+const CATS=[
+{id:"perso",name:"Mes Produits Perso",emoji:"⭐",color:"#FF6B35"},
+{id:"fruits",name:"Fruits & Légumes",emoji:"🥬",color:"#4CAF50"},
+{id:"viandes",name:"Viandes & Poissons",emoji:"🥩",color:"#E53935"},
+{id:"laitiers",name:"Produits laitiers",emoji:"🧀",color:"#FFA726"},
+{id:"boulangerie",name:"Boulangerie",emoji:"🥖",color:"#D4A24E"},
+{id:"epicerie",name:"Épicerie & Conserves",emoji:"🥫",color:"#8D6E63"},
+{id:"boissons",name:"Boissons",emoji:"🥤",color:"#29B6F6"},
+{id:"surgeles",name:"Surgelés",emoji:"🧊",color:"#78909C"},
+{id:"hygiene",name:"Hygiène & Maison",emoji:"🧹",color:"#AB47BC"},
+];
+const PDB={perso:[],
+fruits:["Abricot","Ananas","Avocat","Banane","Banane plantain","Cassis","Cerise","Châtaigne","Citron","Citron vert","Clémentine","Coco","Coing","Datte","Figue","Fraise","Framboise","Fruit de la passion","Grenade","Groseille","Kaki","Kiwi","Kumquat","Litchi","Mandarine","Mangue","Melon","Mirabelle","Mûre","Myrtille","Nectarine","Noisette","Noix","Noix de cajou","Noix de coco","Noix de macadamia","Noix de pécan","Orange","Orange sanguine","Pamplemousse","Papaye","Pastèque","Pêche","Pistache","Poire","Pomelo","Pomme","Pomme Gala","Pomme Golden","Pomme Granny","Pomme Pink Lady","Prune","Pruneau","Raisin blanc","Raisin noir","Rhubarbe","Amandes","Amandes effilées","Cacahuètes","Graines de tournesol","Graines de courge","Graines de lin","Graines de chia","Graines de sésame","Mélange fruits secs","Cranberries séchées","Baies de goji","Ail","Artichaut","Asperge","Aubergine","Betterave","Betterave cuite","Blette","Brocoli","Carotte","Carotte râpée","Céleri branche","Céleri rave","Champignon de Paris","Champignon pleurote","Champignon shiitaké","Chou blanc","Chou chinois","Chou de Bruxelles","Chou-fleur","Chou frisé","Chou kale","Chou rouge","Chou vert","Citrouille","Concombre","Coriandre fraîche","Courge","Courge butternut","Courge spaghetti","Courgette","Cresson","Échalote","Endive","Épinard","Fenouil","Fève","Gingembre","Haricot beurre","Haricot plat","Haricot vert","Laitue","Mâche","Maïs frais","Mange-tout","Menthe fraîche","Mesclun","Navet","Oignon","Oignon blanc","Oignon rouge","Oignon doux","Panais","Patate douce","Persil","Persil plat","Petit pois frais","Piment","Poireau","Poivron jaune","Poivron rouge","Poivron vert","Pomme de terre","Pomme de terre Charlotte","Pomme de terre grenaille","Pomme de terre Ratte","Pomme de terre Bintje","Potimarron","Potiron","Pousse de soja","Radis","Radis noir","Romaine","Roquette","Rutabaga","Salade","Salade batavia","Salade feuille de chêne","Salade frisée","Salade iceberg","Salade sucrine","Salsifis","Tomate","Tomate cerise","Tomate cœur de bœuf","Tomate grappe","Tomate Roma","Topinambour","Basilic frais","Ciboulette","Aneth","Estragon","Romarin frais","Sauge fraîche","Thym frais"],
+viandes:["Blanc de poulet","Cuisse de poulet","Pilon de poulet","Aile de poulet","Poulet entier","Poulet fermier","Escalope de poulet","Suprême de poulet","Poulet rôti (traiteur)","Nuggets poulet frais","Escalope de dinde","Cuisse de dinde","Rôti de dinde","Filet de dinde","Blanc de dinde","Dinde fumée","Lardons de dinde","Lardons de volaille","Escalope de veau","Rôti de veau","Blanquette de veau","Osso bucco","Jarret de veau","Canard magret","Canard cuisse","Foie gras","Pintade","Lapin","Caille","Steak haché bœuf 5%","Steak haché bœuf 15%","Steak haché bœuf 20%","Bavette","Entrecôte","Faux-filet","Filet de bœuf","Côte de bœuf","Rôti de bœuf","Rumsteck","Tournedos","Onglet","Hampe","Paleron","Joue de bœuf","Bourguignon (morceaux)","Pot-au-feu (morceaux)","Carpaccio de bœuf","Tartare de bœuf","Bœuf séché","Bresaola","Côtelette d'agneau","Gigot d'agneau","Épaule d'agneau","Souris d'agneau","Carré d'agneau","Merguez","Kefta","Viande hachée d'agneau","Saumon frais","Saumon fumé","Pavé de saumon","Filet de saumon","Truite","Truite fumée","Cabillaud","Filet de cabillaud","Dos de cabillaud","Colin","Merlu","Lieu noir","Sole","Dorade","Bar","Maquereau","Sardine fraîche","Thon frais","Espadon","Raie","Lotte","Rouget","Haddock fumé","Morue","Crevettes crues","Crevettes cuites","Crevettes roses","Gambas","Langoustine","Homard","Crabe","Moules","Huîtres","Saint-Jacques","Noix de Saint-Jacques","Palourde","Bulot","Calamars","Poulpe","Seiche","Surimi","Croustibat","Tarama","Blinis","Crevettes cocktail","Tartare de saumon","Rillettes de saumon","Rillettes de thon","Rillettes de canard"],
+laitiers:["Lait entier","Lait demi-écrémé","Lait écrémé","Lait concentré sucré","Lait en poudre","Lait fermenté","Lait d'amande","Lait d'avoine","Lait de coco","Lait de soja","Lait de riz","Lait de noisette","Lait sans lactose","Kéfir","Beurre doux","Beurre demi-sel","Beurre salé","Beurre allégé","Margarine","Crème fraîche épaisse","Crème fraîche légère","Crème fleurette","Crème liquide","Crème entière","Crème de coco","Crème de soja","Crème chantilly","Mascarpone","Ricotta","Yaourt nature","Yaourt aux fruits","Yaourt vanille","Yaourt fraise","Yaourt brassé","Yaourt grec","Yaourt à boire","Yaourt 0%","Yaourt bio","Yaourt brebis","Yaourt chèvre","Skyr","Fromage blanc","Fromage blanc 0%","Fromage blanc 40%","Petit suisse","Faisselle","Crème dessert vanille","Crème dessert chocolat","Crème dessert caramel","Danette","Mousse au chocolat","Riz au lait","Semoule au lait","Tiramisu","Mozzarella","Burrata","Feta","Cottage cheese","Saint-Môret","Philadelphia","Boursin","Kiri","Vache qui rit","Fromage à tartiner","Tzatziki","Camembert","Brie","Coulommiers","Maroilles","Munster","Saint-Nectaire","Reblochon","Emmental","Emmental râpé","Gruyère","Comté","Beaufort","Tomme de Savoie","Cantal","Raclette","Morbier","Roquefort","Bleu d'Auvergne","Fourme d'Ambert","Parmesan","Pecorino","Gouda","Edam","Cheddar","Mimolette","Manchego","Halloumi","Chèvre frais","Bûche de chèvre","Crottin de Chavignol","Rocamadour","Œuf (x6)","Œuf (x10)","Œuf (x12)","Œuf bio","Œuf plein air","Compote pomme","Compote pomme-poire","Compote pomme-banane","Compote sans sucre ajouté","Compote en gourde"],
+boulangerie:["Baguette","Baguette tradition","Baguette aux céréales","Baguette complète","Pain de mie","Pain de mie complet","Pain de mie sans croûte","Pain complet","Pain aux céréales","Pain de seigle","Pain de campagne","Pain au levain","Pain aux noix","Pain aux olives","Pain sans gluten","Pain burger","Pain pita","Pain libanais","Pain naan","Pain turc","Tortilla blé","Tortilla maïs","Galette wrap","Focaccia","Ciabatta","Fougasse","Pain d'épices","Blinis","Biscottes","Crackers","Gressins","Pain grillé","Toasts","Croûtons","Chapelure","Croissant","Pain au chocolat","Pain aux raisins","Chausson aux pommes","Brioche","Brioche tranchée","Pain au lait","Chouquettes","Beignet","Gaufre","Crêpes","Crêpes dentelle","Pancakes","Tarte aux pommes","Tarte au citron","Flan pâtissier","Éclair chocolat","Paris-Brest","Millefeuille","Macaron","Madeleine","Financier","Cannelé","Brownie","Cookie","Muffin","Palmier","Cheesecake","Pâte brisée","Pâte feuilletée","Pâte sablée","Pâte à pizza","Pâte filo"],
+epicerie:["Spaghetti","Coquillettes","Penne","Fusilli","Farfalle","Tagliatelles","Linguine","Rigatoni","Macaroni","Tortellini","Ravioli","Gnocchi","Lasagnes (feuilles)","Vermicelles","Nouilles chinoises","Nouilles de riz","Nouilles udon","Nouilles soba","Pâtes complètes","Pâtes fraîches","Couscous (graines)","Ebly (blé)","Riz blanc","Riz basmati","Riz thaï","Riz jasmin","Riz complet","Riz sauvage","Riz arborio (risotto)","Riz rond","Riz à sushi","Riz express","Quinoa","Quinoa rouge","Boulgour","Semoule fine","Semoule moyenne","Polenta","Millet","Sarrasin","Flocons d'avoine","Son d'avoine","Müesli","Granola","Corn flakes","Chocapic","Miel Pops","Special K","Cheerios","Lentilles vertes","Lentilles corail","Lentilles beluga","Pois chiches","Pois chiches en boîte","Pois cassés","Haricots rouges","Haricots rouges en boîte","Haricots blancs","Haricots blancs en boîte","Flageolets","Fèves","Haricots noirs","Edamame","Tomates pelées","Tomates concassées","Pulpe de tomate","Coulis de tomate","Concentré de tomate","Sauce tomate nature","Sauce tomate basilic","Maïs en boîte","Petits pois en boîte","Petits pois carottes","Haricots verts en boîte","Champignons en boîte","Cœurs de palmier","Ratatouille en boîte","Olives vertes","Olives noires","Câpres","Cornichons","Thon en boîte nature","Thon en boîte huile olive","Sardines en boîte","Sardines à l'huile","Sardines au citron","Sardines à la tomate","Maquereaux en boîte","Maquereaux moutarde","Anchois bocal","Saumon en boîte","Miettes de thon","Huile d'olive","Huile d'olive extra vierge","Huile de tournesol","Huile de colza","Huile de coco","Huile de sésame","Vinaigre balsamique","Vinaigre de cidre","Vinaigre blanc","Vinaigre de riz","Moutarde de Dijon","Moutarde à l'ancienne","Ketchup","Mayonnaise","Sauce barbecue","Sauce soja","Sauce sriracha","Harissa","Sauce hoisin","Sauce teriyaki","Pesto vert","Pesto rouge","Tapenade","Vinaigrette","Houmous","Guacamole","Sucre en poudre","Sucre roux","Cassonade","Sucre vanillé","Sucre glace","Sirop d'agave","Sirop d'érable","Confiture fraise","Confiture abricot","Confiture framboise","Miel","Miel d'acacia","Nutella","Beurre de cacahuète","Beurre d'amande","Pâte de spéculoos","Caramel au beurre salé","Chocolat noir","Chocolat au lait","Chocolat blanc","Cacao en poudre","Pépites de chocolat","Farine T45","Farine T55","Farine complète","Farine de maïs (Maïzena)","Farine sans gluten","Fécule de pomme de terre","Levure chimique","Bicarbonate de soude","Gélatine","Agar-agar","Extrait de vanille","Sel fin","Sel gros","Fleur de sel","Poivre noir","Poivre blanc","Paprika","Paprika fumé","Curcuma","Curry","Garam masala","Cumin","Coriandre moulue","Cannelle","Gingembre moulu","Muscade","Ras el hanout","Herbes de Provence","Thym","Romarin","Laurier","Origan","Basilic séché","Bouillon cube bœuf","Bouillon cube poule","Bouillon cube légumes","Fond de veau","Fumet de poisson","Chips nature","Chips barbecue","Chips paprika","Tortilla chips","Doritos","Cacahuètes grillées","Pistaches","Noix de cajou grillées","Mélange apéritif","Biscuits apéritif","Biscuits sablés","Speculoos","Cookies chocolat","BN","Prince","Madeleines","Barres de céréales","Barres protéinées","Galettes de riz","Galettes de maïs","Soupe en brique","Soupe de légumes","Soupe de tomates","Soupe miso","Gazpacho","Purée en flocons","Tofu","Tofu fumé","Lait de coco","Crème de coco","Pâte de curry vert","Pâte de curry rouge","Nori (algues)","Feuilles de riz","Pâte de miso","Café moulu","Café en grains","Café soluble","Café décaféiné","Capsules Nespresso","Capsules compatibles","Dosettes Senseo","Chicorée","Thé noir","Thé vert","Thé Earl Grey","Thé à la menthe","Thé chai","Tisane camomille","Tisane verveine","Tisane menthe","Infusion fruits rouges"],
+boissons:["Eau plate","Eau de source","Évian","Volvic","Cristalline","Vittel","Contrex","Eau gazeuse","Perrier","San Pellegrino","Badoit","Salvetat","Eau aromatisée citron","Eau aromatisée pêche","Eau aromatisée fraise","Jus d'orange","Jus d'orange pressé","Jus d'orange sans pulpe","Jus d'orange avec pulpe","Jus de pomme","Jus de pomme trouble","Jus de raisin","Jus de pamplemousse","Jus de citron","Jus d'ananas","Jus de mangue","Jus de pêche","Jus de tomate","Jus de cranberry","Jus de grenade","Jus multifruits","Jus multivitaminé","Jus ACE","Jus tropical","Nectar d'orange","Nectar de pêche","Nectar de mangue","Smoothie fraise banane","Smoothie mangue","Smoothie vert","Citronnade","Orangeade","Coca-Cola","Coca-Cola Zero","Coca-Cola Cherry","Pepsi","Pepsi Max","Orangina","Fanta orange","Fanta citron","Sprite","7Up","Schweppes tonic","Schweppes Agrum'","Limonade","Ice Tea pêche","Ice Tea citron","Ice Tea mangue","Oasis tropical","Oasis pêche abricot","Sirop de grenadine","Sirop de menthe","Sirop de citron","Sirop d'orgeat","Sirop de fraise","Sirop de pêche","Sirop de cassis","Sirop de framboise","Sirop de rose","Chocolat chaud poudre","Cacao Van Houten","Lait d'amande","Lait d'avoine","Lait de soja","Lait de coco","Lait de riz","Red Bull","Monster","Boisson isotonique","Powerade"],
+surgeles:["Frites classiques","Frites allumettes","Frites carrées","Frites rondes","Frites ondulées","Frites patate douce","Frites au four","Potatoes","Pommes noisettes","Pommes duchesse","Rostis","Haricots verts surgelés","Petits pois surgelés","Petits pois carottes","Épinards surgelés","Brocoli surgelé","Chou-fleur surgelé","Courgettes surgelées","Carottes surgelées","Poêlée de légumes","Poêlée champêtre","Poêlée méditerranéenne","Poêlée asiatique","Ratatouille surgelée","Maïs surgelé","Steak haché surgelé","Boulettes de bœuf","Boulettes de volaille","Nuggets de poulet","Cordons bleus volaille","Escalope panée","Aiguillettes de poulet","Émincés de poulet","Émincés de dinde","Poisson pané","Croustibat","Filet cabillaud surgelé","Filet saumon surgelé","Filet colin surgelé","Crevettes surgelées","Crevettes décortiquées","Gambas surgelées","Moules surgelées","Noix St-Jacques surgelées","Calamars surgelés","Pizza surgelée","Pizza 4 fromages","Pizza margherita","Pizza reine","Quiche surgelée","Tarte flambée","Lasagnes surgelées","Gratin dauphinois surgelé","Hachis parmentier surgelé","Couscous surgelé","Paella surgelée","Wok de légumes","Nems","Nems poulet","Samoussa","Gyoza","Spring rolls","Crêpes surgelées","Galettes surgelées","Feuilletés","Baguette surgelée","Croissant surgelé","Pain au chocolat surgelé","Naan surgelé","Glace vanille","Glace chocolat","Glace fraise","Glace caramel","Glace pistache","Glace cookie","Magnum","Cornetto","Sorbet citron","Sorbet framboise","Sorbet mangue","Fondant chocolat surgelé","Cônes glacés","Fruits rouges surgelés","Framboises surgelées","Myrtilles surgelées","Mangue surgelée","Ananas surgelé"],
+hygiene:["Lessive liquide","Lessive en poudre","Lessive capsules","Lessive couleurs","Lessive noir","Lessive bébé","Lessive écologique","Adoucissant","Adoucissant concentré","Détachant","Lingettes anti-décoloration","Produit multi-surfaces","Nettoyant cuisine","Nettoyant salle de bain","Nettoyant sol","Nettoyant vitres","Nettoyant four","Nettoyant WC","Pastille WC","Bloc WC","Gel WC","Anti-calcaire","Anti-calcaire spray","Détartrant","Acide citrique","Vinaigre blanc","Vinaigre ménager","Bicarbonate de soude","Cristaux de soude","Savon noir","Savon de Marseille","Eau de Javel","Désinfectant","Spray désinfectant","Lingettes désinfectantes","Lingettes multi-surfaces","Ensuit tout","Cif crème","Désodorisant intérieur","Désodorisant WC","Liquide vaisselle","Tablettes lave-vaisselle","Sel régénérant lave-vaisselle","Liquide de rinçage","Nettoyant machine à laver","Papier toilette","Papier toilette double épaisseur","Sopalin","Essuie-tout","Mouchoirs","Mouchoirs en boîte","Serviettes en papier","Papier aluminium","Film alimentaire","Papier cuisson","Sacs congélation","Sacs poubelle 30L","Sacs poubelle 50L","Sacs poubelle cuisine","Éponges","Éponges grattantes","Éponge microfibre","Brosse vaisselle","Brosse WC","Gants ménagers","Chiffon microfibre","Anti-moustiques","Spray anti-insectes","Savon mains","Savon mains liquide","Savon mains recharge","Gel douche","Gel douche homme","Gel douche femme","Gel douche enfant","Crème de douche","Savon solide","Shampoing","Shampoing antipelliculaire","Shampoing cheveux secs","Shampoing cheveux gras","Shampoing 2en1","Shampoing bio","Shampoing enfant","Shampoing sec","Après-shampoing","Masque capillaire","Crème hydratante","Crème visage","Crème mains","Lait corporel","Eau micellaire","Démaquillant","Gommage visage","Crème solaire","Baume à lèvres","Dentifrice","Dentifrice blancheur","Dentifrice enfant","Brosse à dents","Fil dentaire","Bain de bouche","Déodorant spray","Déodorant bille","Déodorant stick","Anti-transpirant","Rasoir jetable","Lames de rasoir","Mousse à raser","Après-rasage","Coton","Disques de coton","Coton-tige","Lingettes bébé","Couches bébé","Serviettes hygiéniques","Protège-slips","Tampons","Pansements","Compresses","Sparadrap","Sérum physiologique","Doliprane","Ibuprofène","Vitamine C","Vitamine D","Magnésium"]
+};
+
+const RCATS=["🌅 Petit-déjeuner","🍽️ Déjeuner","🌙 Dîner","🍪 Encas"];
+const RECIPES=[
+{name:"Bowl cake chocolat",emoji:"🍫",cat:"🌅 Petit-déjeuner",servings:1,steps:["Écraser la banane","Mélanger tous les ingrédients","Micro-ondes 2min","Démouler et déguster"],ingredients:[{n:"Flocons d'avoine",q:40,u:"g"},{n:"Œuf (x6)",q:1,u:""},{n:"Lait demi-écrémé",q:5,u:"cl"},{n:"Cacao en poudre",q:1,u:"c.s"},{n:"Banane",q:1,u:""}]},
+{name:"Bowl cake banane",emoji:"🍌",cat:"🌅 Petit-déjeuner",servings:1,steps:["Écraser la banane","Mélanger avec les flocons, l'œuf et le lait","Micro-ondes 2min","Ajouter le beurre de cacahuète"],ingredients:[{n:"Flocons d'avoine",q:40,u:"g"},{n:"Œuf (x6)",q:1,u:""},{n:"Banane",q:1,u:""},{n:"Beurre de cacahuète",q:1,u:"c.s"}]},
+{name:"Pancakes protéinés",emoji:"🥞",cat:"🌅 Petit-déjeuner",servings:2,steps:["Mixer flocons+banane+œuf+fromage blanc","Cuire à la poêle 2min par face","Servir avec du miel"],ingredients:[{n:"Flocons d'avoine",q:100,u:"g"},{n:"Œuf (x6)",q:1,u:""},{n:"Banane",q:1,u:""},{n:"Fromage blanc 0%",q:100,u:"g"},{n:"Miel",q:1,u:"c.s"}]},
+{name:"Overnight oats",emoji:"🥣",cat:"🌅 Petit-déjeuner",servings:1,steps:["Mélanger flocons+lait+yaourt","Réfrigérer toute la nuit","Ajouter fruits et miel le matin"],ingredients:[{n:"Flocons d'avoine",q:50,u:"g"},{n:"Lait d'amande",q:15,u:"cl"},{n:"Yaourt grec",q:50,u:"g"},{n:"Miel",q:1,u:"c.s"},{n:"Fraise",q:50,u:"g"}]},
+{name:"Tartines avocat œuf",emoji:"🥑",cat:"🌅 Petit-déjeuner",servings:2,steps:["Toaster le pain","Écraser l'avocat avec citron+sel","Cuire les œufs au plat","Assembler"],ingredients:[{n:"Pain complet",q:4,u:"tr."},{n:"Avocat",q:2,u:""},{n:"Œuf (x6)",q:1,u:""},{n:"Citron",q:1,u:""}]},
+{name:"Crêpes",emoji:"🥞",cat:"🌅 Petit-déjeuner",servings:4,steps:["Mélanger farine+œufs+lait","Laisser reposer 30min","Cuire dans une poêle beurrée"],ingredients:[{n:"Farine T45",q:250,u:"g"},{n:"Œuf (x6)",q:1,u:""},{n:"Lait demi-écrémé",q:50,u:"cl"},{n:"Beurre doux",q:50,u:"g"}]},
+{name:"Bol açaï",emoji:"🥣",cat:"🌅 Petit-déjeuner",servings:2,steps:["Mixer banane+fruits+lait","Verser dans un bol","Garnir avec flocons, beurre de cacahuète, miel"],ingredients:[{n:"Banane",q:2,u:""},{n:"Myrtille",q:100,u:"g"},{n:"Fraise",q:100,u:"g"},{n:"Flocons d'avoine",q:50,u:"g"},{n:"Beurre de cacahuète",q:2,u:"c.s"},{n:"Lait d'amande",q:20,u:"cl"}]},
+{name:"Pâtes Carbonara poulet",emoji:"🍝",cat:"🍽️ Déjeuner",servings:4,steps:["Cuire les pâtes al dente","Faire revenir le poulet émincé","Mélanger œufs+crème+parmesan","Mélanger le tout hors du feu"],ingredients:[{n:"Spaghetti",q:500,u:"g"},{n:"Blanc de poulet",q:300,u:"g"},{n:"Œuf (x6)",q:1,u:""},{n:"Parmesan",q:100,u:"g"},{n:"Crème fraîche épaisse",q:20,u:"cl"}]},
+{name:"Bolognaise",emoji:"🍝",cat:"🍽️ Déjeuner",servings:4,steps:["Revenir oignon+ail","Ajouter la viande, faire dorer","Ajouter sauce tomate, mijoter 20min","Servir sur les pâtes"],ingredients:[{n:"Spaghetti",q:500,u:"g"},{n:"Steak haché bœuf 15%",q:400,u:"g"},{n:"Sauce tomate nature",q:1,u:"bocal"},{n:"Oignon",q:2,u:""},{n:"Ail",q:2,u:""}]},
+{name:"Salade César",emoji:"🥗",cat:"🍽️ Déjeuner",servings:4,steps:["Griller le poulet émincé","Préparer la sauce (citron+huile+parmesan)","Assembler salade+poulet+croûtons+sauce"],ingredients:[{n:"Salade",q:1,u:""},{n:"Blanc de poulet",q:400,u:"g"},{n:"Parmesan",q:80,u:"g"},{n:"Croûtons",q:100,u:"g"},{n:"Citron",q:1,u:""}]},
+{name:"Wrap poulet avocat",emoji:"🌯",cat:"🍽️ Déjeuner",servings:4,steps:["Griller le poulet","Écraser l'avocat","Garnir les tortillas","Rouler et couper en deux"],ingredients:[{n:"Tortilla blé",q:4,u:""},{n:"Blanc de poulet",q:400,u:"g"},{n:"Avocat",q:2,u:""},{n:"Tomate",q:2,u:""},{n:"Salade",q:1,u:""}]},
+{name:"Bowl protéiné",emoji:"🥣",cat:"🍽️ Déjeuner",servings:2,steps:["Cuire le riz","Griller le poulet","Cuire l'œuf","Assembler tous les ingrédients"],ingredients:[{n:"Blanc de poulet",q:300,u:"g"},{n:"Riz complet",q:200,u:"g"},{n:"Avocat",q:1,u:""},{n:"Œuf (x6)",q:1,u:""},{n:"Edamame",q:100,u:"g"},{n:"Sauce soja",q:2,u:"c.s"}]},
+{name:"Taboulé",emoji:"🥗",cat:"🍽️ Déjeuner",servings:6,steps:["Hydrater la semoule","Couper tomate+concombre en dés","Mélanger avec menthe+citron+huile","Réfrigérer 1h"],ingredients:[{n:"Semoule fine",q:300,u:"g"},{n:"Tomate",q:4,u:""},{n:"Concombre",q:1,u:""},{n:"Menthe fraîche",q:1,u:"bouquet"},{n:"Citron",q:3,u:""}]},
+{name:"Salade de quinoa",emoji:"🥗",cat:"🍽️ Déjeuner",servings:4,steps:["Cuire le quinoa","Couper les légumes","Émietter la feta","Assaisonner citron+huile"],ingredients:[{n:"Quinoa",q:250,u:"g"},{n:"Concombre",q:1,u:""},{n:"Tomate cerise",q:250,u:"g"},{n:"Feta",q:100,u:"g"},{n:"Avocat",q:1,u:""}]},
+{name:"Pâtes Pesto",emoji:"🌿",cat:"🍽️ Déjeuner",servings:4,steps:["Cuire les pâtes","Mélanger avec le pesto","Ajouter parmesan+tomates cerises"],ingredients:[{n:"Penne",q:500,u:"g"},{n:"Pesto vert",q:1,u:"pot"},{n:"Parmesan",q:80,u:"g"},{n:"Tomate cerise",q:250,u:"g"}]},
+{name:"Poulet rôti & Frites",emoji:"🍗",cat:"🌙 Dîner",servings:4,steps:["Préchauffer four 200°C","Assaisonner le poulet","Enfourner 1h15","Cuire les frites"],ingredients:[{n:"Poulet entier",q:1,u:""},{n:"Frites classiques",q:1,u:"kg"},{n:"Herbes de Provence",q:1,u:"c.s"}]},
+{name:"Curry de poulet",emoji:"🍛",cat:"🌙 Dîner",servings:4,steps:["Revenir oignon","Ajouter poulet, faire dorer","Ajouter curry+tomate+lait de coco","Mijoter 25min, servir avec riz"],ingredients:[{n:"Blanc de poulet",q:600,u:"g"},{n:"Lait de coco",q:40,u:"cl"},{n:"Oignon",q:2,u:""},{n:"Curry",q:2,u:"c.s"},{n:"Riz basmati",q:300,u:"g"},{n:"Tomates concassées",q:1,u:"boîte"}]},
+{name:"Saumon grillé & légumes",emoji:"🐟",cat:"🌙 Dîner",servings:4,steps:["Préchauffer four 180°C","Disposer légumes, arroser d'huile","Poser le saumon dessus","Enfourner 20min"],ingredients:[{n:"Pavé de saumon",q:4,u:""},{n:"Brocoli",q:1,u:""},{n:"Courgette",q:2,u:""},{n:"Citron",q:1,u:""}]},
+{name:"Ratatouille",emoji:"🍆",cat:"🌙 Dîner",servings:6,steps:["Couper tous les légumes en dés","Revenir oignon+ail","Ajouter les légumes un par un","Mijoter 40min à feu doux"],ingredients:[{n:"Courgette",q:3,u:""},{n:"Aubergine",q:2,u:""},{n:"Poivron rouge",q:2,u:""},{n:"Tomate",q:6,u:""},{n:"Oignon",q:2,u:""}]},
+{name:"Hachis Parmentier",emoji:"🥘",cat:"🌙 Dîner",servings:4,steps:["Cuire pommes de terre, écraser en purée","Revenir viande+oignon","Couche viande, couche purée, fromage","Gratiner 20min à 200°C"],ingredients:[{n:"Steak haché bœuf 15%",q:500,u:"g"},{n:"Pomme de terre",q:1,u:"kg"},{n:"Oignon",q:2,u:""},{n:"Beurre doux",q:50,u:"g"},{n:"Emmental râpé",q:100,u:"g"}]},
+{name:"Couscous poulet",emoji:"🍲",cat:"🌙 Dîner",servings:6,steps:["Faire revenir le poulet","Ajouter légumes coupés","Couvrir d'eau, mijoter 40min","Préparer la semoule à part"],ingredients:[{n:"Couscous (graines)",q:500,u:"g"},{n:"Cuisse de poulet",q:6,u:""},{n:"Carotte",q:4,u:""},{n:"Courgette",q:2,u:""},{n:"Navet",q:2,u:""},{n:"Pois chiches en boîte",q:1,u:"boîte"},{n:"Harissa",q:1,u:"tube"}]},
+{name:"Wok poulet légumes",emoji:"🥘",cat:"🌙 Dîner",servings:4,steps:["Émincer le poulet","Sauter les légumes au wok","Ajouter le poulet+sauce soja","Servir avec nouilles"],ingredients:[{n:"Blanc de poulet",q:500,u:"g"},{n:"Poivron rouge",q:1,u:""},{n:"Courgette",q:1,u:""},{n:"Carotte",q:2,u:""},{n:"Sauce soja",q:3,u:"c.s"},{n:"Nouilles chinoises",q:300,u:"g"}]},
+{name:"Pizza maison",emoji:"🍕",cat:"🌙 Dîner",servings:4,steps:["Étaler la pâte","Tartiner de sauce tomate","Garnir mozzarella+champignons+olives","Enfourner 12min à 220°C"],ingredients:[{n:"Pâte à pizza",q:1,u:""},{n:"Sauce tomate nature",q:1,u:"bocal"},{n:"Mozzarella",q:250,u:"g"},{n:"Champignon de Paris",q:200,u:"g"},{n:"Olives noires",q:50,u:"g"}]},
+{name:"Lasagnes bœuf",emoji:"🍝",cat:"🌙 Dîner",servings:6,steps:["Préparer la sauce bolognaise","Alterner feuilles+sauce+fromage","Terminer par fromage râpé","Enfourner 30min à 180°C"],ingredients:[{n:"Lasagnes (feuilles)",q:1,u:"paq."},{n:"Steak haché bœuf 15%",q:500,u:"g"},{n:"Sauce tomate nature",q:2,u:"bocaux"},{n:"Emmental râpé",q:200,u:"g"},{n:"Oignon",q:2,u:""}]},
+{name:"Poulet tikka masala",emoji:"🍛",cat:"🌙 Dîner",servings:4,steps:["Mariner poulet dans yaourt+épices 1h","Griller le poulet","Préparer sauce (tomate+crème coco+épices)","Servir avec riz basmati"],ingredients:[{n:"Blanc de poulet",q:600,u:"g"},{n:"Yaourt nature",q:200,u:"g"},{n:"Tomates concassées",q:1,u:"boîte"},{n:"Crème de coco",q:20,u:"cl"},{n:"Garam masala",q:2,u:"c.s"},{n:"Riz basmati",q:300,u:"g"}]},
+{name:"Shakshuka",emoji:"🍳",cat:"🌙 Dîner",servings:4,steps:["Revenir oignon+poivron","Ajouter tomates+épices","Creuser des trous, casser les œufs","Couvrir et cuire 10min"],ingredients:[{n:"Œuf (x6)",q:1,u:""},{n:"Tomates concassées",q:2,u:"boîtes"},{n:"Poivron rouge",q:2,u:""},{n:"Oignon",q:1,u:""},{n:"Cumin",q:1,u:"c.c"}]},
+{name:"Dahl de lentilles",emoji:"🍛",cat:"🌙 Dîner",servings:4,steps:["Revenir oignon","Ajouter lentilles+tomate+lait coco+curry","Mijoter 25min","Servir avec riz"],ingredients:[{n:"Lentilles corail",q:300,u:"g"},{n:"Lait de coco",q:40,u:"cl"},{n:"Oignon",q:1,u:""},{n:"Tomates concassées",q:1,u:"boîte"},{n:"Curry",q:2,u:"c.s"},{n:"Riz basmati",q:300,u:"g"}]},
+{name:"Chili con carne",emoji:"🌶️",cat:"🌙 Dîner",servings:6,steps:["Revenir viande+oignon","Ajouter poivron+tomate+épices","Ajouter haricots rouges","Mijoter 30min, servir avec riz"],ingredients:[{n:"Steak haché bœuf 15%",q:600,u:"g"},{n:"Haricots rouges en boîte",q:2,u:"boîtes"},{n:"Tomates concassées",q:2,u:"boîtes"},{n:"Oignon",q:2,u:""},{n:"Poivron rouge",q:1,u:""},{n:"Cumin",q:2,u:"c.c"},{n:"Riz basmati",q:300,u:"g"}]},
+{name:"Pad thaï poulet",emoji:"🍜",cat:"🌙 Dîner",servings:4,steps:["Cuire nouilles de riz","Sauter poulet+crevettes","Ajouter œuf brouillé+sauce soja+citron","Garnir de cacahuètes"],ingredients:[{n:"Nouilles de riz",q:400,u:"g"},{n:"Blanc de poulet",q:400,u:"g"},{n:"Crevettes crues",q:150,u:"g"},{n:"Cacahuètes",q:50,u:"g"},{n:"Sauce soja",q:3,u:"c.s"},{n:"Citron vert",q:2,u:""}]},
+{name:"Tajine d'agneau",emoji:"🍲",cat:"🌙 Dîner",servings:4,steps:["Faire dorer l'agneau","Ajouter oignons+épices","Ajouter pruneaux+eau, mijoter 1h30","Garnir d'amandes grillées"],ingredients:[{n:"Épaule d'agneau",q:800,u:"g"},{n:"Pruneau",q:200,u:"g"},{n:"Oignon",q:3,u:""},{n:"Amandes",q:50,u:"g"},{n:"Miel",q:2,u:"c.s"},{n:"Ras el hanout",q:1,u:"c.s"}]},
+{name:"Energy balls",emoji:"🟤",cat:"🍪 Encas",servings:10,steps:["Mixer flocons+beurre de cacahuète+miel","Ajouter pépites chocolat","Former des boules","Réfrigérer 1h"],ingredients:[{n:"Flocons d'avoine",q:100,u:"g"},{n:"Beurre de cacahuète",q:60,u:"g"},{n:"Miel",q:30,u:"g"},{n:"Pépites de chocolat",q:30,u:"g"}]},
+{name:"Smoothie protéiné",emoji:"🥤",cat:"🍪 Encas",servings:1,steps:["Mixer tous les ingrédients","Servir frais"],ingredients:[{n:"Banane",q:1,u:""},{n:"Lait d'amande",q:25,u:"cl"},{n:"Beurre de cacahuète",q:1,u:"c.s"},{n:"Flocons d'avoine",q:30,u:"g"}]},
+];
+
+const SPLASHES={"N":{text:"Je t'aime Maman ❤️",bg:"linear-gradient(135deg,#FF6B35,#FF9800,#FFD54F)",icon:"❤️",sub:""},"Z":{text:"Oooooh le sang 🔥",bg:"linear-gradient(135deg,#0f0c29,#302b63,#24243e)",icon:"✨",sub:"J'espère que tu vas kiffer l'app"},"C":{text:"Oooooh le couz 😎",bg:"linear-gradient(135deg,#134e5e,#71b280,#2ecc71)",icon:"💥",sub:"Comme ça ta mémoire elle te fera plus défaut :D"}};
+const CHEF_STYLES=[{id:"cool",name:"😎 Cool"},{id:"coach",name:"💪 Coach"},{id:"doux",name:"🌸 Doux"},{id:"drole",name:"😂 Drôle"}];
+const MOTIV=["T'es un(e) warrior ! 💪","Liste terminée ! 🏆","Champion(ne) ! 🎉","Même Etchebest fait pas mieux ! 😏","Mission accomplie ! 🔥","Tu gères ! 👑"];
+const AVATARS=["😎","👨","👩","🧑","👨‍🍳","💪","🌟","🔥","❤️","🎯","👑","🦁","🐱","🌸","✨","🎮","⚡","🍕","🏋️","🧠"];
+const ACCENT_COLORS=["#FF6B35","#E53935","#4CAF50","#29B6F6","#AB47BC","#FF9800","#00BCD4","#E91E63","#3F51B5","#009688"];
+const SEASON={0:["Clémentine","Endive","Poireau","Navet","Kiwi","Orange"],1:["Clémentine","Endive","Poireau","Navet","Kiwi"],2:["Asperge","Radis","Épinard","Salade","Carotte"],3:["Fraise","Asperge","Radis","Cerise"],4:["Fraise","Cerise","Tomate","Courgette","Melon"],5:["Fraise","Pêche","Melon","Pastèque","Tomate","Poivron"],6:["Pêche","Nectarine","Pastèque","Figue","Tomate","Framboise"],7:["Pêche","Pastèque","Figue","Raisin","Tomate","Myrtille"],8:["Raisin","Figue","Prune","Poire","Pomme","Potiron"],9:["Pomme","Poire","Potiron","Champignon","Endive"],10:["Pomme","Poire","Clémentine","Kiwi","Endive"],11:["Clémentine","Orange","Kiwi","Pomme","Poire","Poireau"]};
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const seas=SEASON[new Date().getMonth()]||[];
+const LS={get:(k,fb)=>{try{const v=localStorage.getItem("mc_"+k);return v?JSON.parse(v):fb}catch{return fb}},set:(k,v)=>{try{localStorage.setItem("mc_"+k,JSON.stringify(v))}catch{}}};
+function Confetti({active}){if(!active)return null;const p=Array.from({length:60},(_,i)=>({id:i,left:Math.random()*100,dl:Math.random()*0.5,c:["#FF6B6B","#4ECDC4","#45B7D1","#FFA726","#AB47BC","#66BB6A","#FFD54F","#EF5350"][i%8],sz:6+Math.random()*6}));return h("div",{style:{position:"fixed",top:0,left:0,right:0,bottom:0,pointerEvents:"none",zIndex:9999}},p.map(x=>h("div",{key:x.id,style:{position:"absolute",top:-10,left:x.left+"%",width:x.sz,height:x.sz*1.5,backgroundColor:x.c,borderRadius:2,animation:"cf 2.5s ease-in "+x.dl+"s forwards"}})));}
+
+function App(){
+// ═══ ALL STATE ═══
+const[dark,setDark]=useState(()=>LS.get("dk",false));
+const[profiles,setProfiles]=useState(()=>LS.get("pr",[]));
+const[cp,setCp]=useState(null);
+const[lists,setLists]=useState(()=>LS.get("ls",[]));
+const[cl,setCl]=useState(null);
+const[items,setItems]=useState(()=>LS.get("it",[]));
+const[tab,setTab]=useState("home");
+const[search,setSearch]=useState("");
+const[filterCat,setFilterCat]=useState(null);
+const[confetti,setConfetti]=useState(false);
+const[newName,setNewName]=useState("");
+const[newPin,setNewPin]=useState("");
+const[pinIn,setPinIn]=useState("");
+const[pinTarg,setPinTarg]=useState(null);
+const[splash,setSplash]=useState(null);
+const[showRecipe,setShowRecipe]=useState(null);
+const[rServ,setRServ]=useState(4);
+const[customR,setCustomR]=useState(()=>LS.get("cr",[]));
+const[favR,setFavR]=useState(()=>LS.get("fr",[]));
+const[showNewR,setShowNewR]=useState(false);
+const[newR,setNewR]=useState({name:"",emoji:"🍽️",cat:"🍽️ Déjeuner",servings:4,ingredients:[],steps:[]});
+const[newIng,setNewIng]=useState({n:"",q:"",u:""});
+const[newStep,setNewStep]=useState("");
+const[notif,setNotif]=useState(null);
+const[showListM,setShowListM]=useState(false);
+const[chatMsgs,setChatMsgs]=useState([]);
+const[chatIn,setChatIn]=useState("");
+const[chatLoad,setChatLoad]=useState(false);
+const[apiKey,setApiKey]=useState(()=>LS.get("gk",""));
+const[showKey,setShowKey]=useState(false);
+const[listSearch,setListSearch]=useState("");
+const[listFilterCat,setListFilterCat]=useState(null);
+const[showBought,setShowBought]=useState(false);
+const[memory,setMemory]=useState([]);
+const[storeMode,setStoreMode]=useState(false);
+const[bounceId,setBounceId]=useState(null);
+const[rTab,setRTab]=useState("all");
+const[rS,setRS]=useState("");
+const[rCatF,setRCatF]=useState("all");
+const[persoProds,setPersoProds]=useState([]);
+const[newPerso,setNewPerso]=useState({name:"",emoji:"📦"});
+const[history,setHistory]=useState(()=>LS.get("hist",[]));
+const[planning,setPlanning]=useState(()=>LS.get("plan",{}));
+const[showTuto,setShowTuto]=useState(false);
+const[hiddenProds,setHiddenProds]=useState([]);
+const[editProf,setEditProf]=useState(null);
+const[ratings,setRatings]=useState(()=>LS.get("rat",{}));
+const[timer,setTimer]=useState(null);
+const[timerLeft,setTimerLeft]=useState(0);
+const[quickAdd,setQuickAdd]=useState("");
+const[showQuickAdd,setShowQuickAdd]=useState(false);
+const[globalSearch,setGlobalSearch]=useState("");
+const[showGlobalSearch,setShowGlobalSearch]=useState(false);
+const[guestMode,setGuestMode]=useState(false);
+const timerRef=useRef(null);
+const chatEndRef=useRef(null);
+const prevComp=useRef(false);
+
+const accent=cp?.color||"#FF6B35";
+const T=useMemo(()=>({bg:dark?"#121212":"#F5F0EB",card:dark?"#1E1E1E":"#FFF",text:dark?"#F5F5F5":"#1A1A2E",ts:dark?"#AAA":"#666",border:dark?"#333":"#E8E0D8",accent,hBg:dark?"#1A1A1A":"#FFF",iBg:dark?"#2A2A2A":"#F8F4F0",sh:dark?"0 2px 8px rgba(0,0,0,.4)":"0 2px 8px rgba(0,0,0,.06)"}),[dark,accent]);
+
+// Timer
+useEffect(()=>{if(timer&&timerLeft>0){timerRef.current=setInterval(()=>setTimerLeft(t=>{if(t<=1){clearInterval(timerRef.current);notify("⏰ Timer terminé !");return 0}return t-1}),1000);return()=>clearInterval(timerRef.current)}},  [timer]);
+const startTimer=(mins)=>{setTimer(mins);setTimerLeft(mins*60)};
+const fmtTime=s=>{const m=Math.floor(s/60);const ss=s%60;return m+":"+(ss<10?"0":"")+ss};
+
+// Init profiles
+useEffect(()=>{let ps=LS.get("pr",[]);let ls=LS.get("ls",[]);let ch=false;
+  if(ps.length===0){
+    ps=[{id:uid(),name:"M",pin:"21",avatar:"😎",color:"#FF6B35",chefName:"Chef Nutri",chefStyle:"cool"},{id:uid(),name:"N",pin:"21",avatar:"❤️",color:"#E91E63",chefName:"Chef Nutri",chefStyle:"doux"},{id:uid(),name:"Z",pin:"",avatar:"✨",color:"#AB47BC",chefName:"Chef Sarton",chefStyle:"drole"},{id:uid(),name:"C",pin:"",avatar:"💪",color:"#4CAF50",chefName:"Chef Sarton",chefStyle:"drole"}];
+    ls=ps.map(p=>({id:uid(),pid:p.id,name:"Ma liste",shared:false}));ch=true;
+  }else{["N","Z","C"].forEach(nm=>{if(!ps.find(p=>p.name===nm)){const d={N:{pin:"21",avatar:"❤️",color:"#E91E63",chefName:"Chef Nutri",chefStyle:"doux"},Z:{pin:"",avatar:"✨",color:"#AB47BC",chefName:"Chef Sarton",chefStyle:"drole"},C:{pin:"",avatar:"💪",color:"#4CAF50",chefName:"Chef Sarton",chefStyle:"drole"}}[nm];ps.push({id:uid(),name:nm,...d});ls.push({id:uid(),pid:ps[ps.length-1].id,name:"Ma liste"});ch=true}});
+    ps=ps.map(p=>{let u={...p};if(!u.avatar){u.avatar="😎";ch=true}if(!u.chefName){u.chefName="Chef Nutri";ch=true}if(!u.chefStyle){u.chefStyle="cool";ch=true}if((u.name==="M"||u.name==="N")&&u.pin!=="21"){u.pin="21";ch=true}return u});}
+  if(ch){setProfiles(ps);setLists(ls);LS.set("pr",ps);LS.set("ls",ls)}else{setProfiles(ps);setLists(ls)}
+},[]);
+
+const persist=(nI,nL,nP,nCR,nFR)=>{if(nI!==undefined){setItems(nI);LS.set("it",nI)}if(nL!==undefined){setLists(nL);LS.set("ls",nL)}if(nP!==undefined){setProfiles(nP);LS.set("pr",nP)}if(nCR!==undefined){setCustomR(nCR);LS.set("cr",nCR)}if(nFR!==undefined){setFavR(nFR);LS.set("fr",nFR)}};
+useEffect(()=>{LS.set("dk",dark)},[dark]);
+useEffect(()=>{LS.set("gk",apiKey)},[apiKey]);
+useEffect(()=>{LS.set("rat",ratings)},[ratings]);
+useEffect(()=>{if(cp){setChatMsgs(LS.get("ch_"+cp.id,[]));setMemory(LS.get("mem_"+cp.id,[]));setPersoProds(LS.get("pp_"+cp.id,[]));setHiddenProds(LS.get("hp_"+cp.id,[]))}},[cp]);
+useEffect(()=>{if(cp&&chatMsgs.length>0)LS.set("ch_"+cp.id,chatMsgs)},[chatMsgs,cp]);
+useEffect(()=>{if(cp)LS.set("pp_"+cp.id,persoProds)},[persoProds,cp]);
+useEffect(()=>{if(cp)LS.set("hp_"+cp.id,hiddenProds)},[hiddenProds,cp]);
+useEffect(()=>{LS.set("plan",planning)},[planning]);
+useEffect(()=>{LS.set("hist",history)},[history]);
+const saveMem=m=>{setMemory(m);if(cp)LS.set("mem_"+cp.id,m)};
+const notify=(m,t="info")=>{setNotif({m,t});setTimeout(()=>setNotif(null),2500)};
+
+const loginProfile=p=>{setCp(p);const l=lists.find(x=>x.pid===p.id);setCl(l||null);
+  if(SPLASHES[p.name]){setSplash(SPLASHES[p.name]);setTimeout(()=>setSplash(null),5000)}
+  if(!LS.get("tuto_"+p.id)){setShowTuto(true);LS.set("tuto_"+p.id,true)}
+  const msgs=LS.get("ch_"+p.id,[]);
+  if(msgs.length===0&&(p.name==="Z"||p.name==="C"))LS.set("ch_"+p.id,[{role:"model",text:"Wesh le sang ! 🔥 Si t'as besoin je suis là n'hésite pas, jt'e mets bien ! Pose-moi n'importe quelle question 💪",ts:Date.now()}])};
+const loginGuest=()=>{const gp={id:"guest",name:"Invité",pin:"",avatar:"👤",color:"#78909C",chefName:"Chef Nutri",chefStyle:"cool"};setCp(gp);const gl={id:"guest_list",pid:"guest",name:"Liste rapide"};setCl(gl);setGuestMode(true)};
+
+// Core helpers
+const isInList=(n,c)=>cl&&items.some(i=>i.lid===cl.id&&i.name===n&&i.cat===c);
+const toggleCat=(n,c)=>{if(!cl){notify("Crée une liste !","warn");return}if(isInList(n,c))persist(items.filter(i=>!(i.lid===cl.id&&i.name===n&&i.cat===c)));else persist([...items,{id:uid(),name:n,cat:c,qty:1,note:"",pri:"normal",bought:false,lid:cl.id,at:Date.now()}])};
+const toggleBought=id=>{setBounceId(id);setTimeout(()=>setBounceId(null),300);persist(items.map(i=>i.id===id?{...i,bought:!i.bought}:i))};
+const removeI=id=>persist(items.filter(i=>i.id!==id));
+const updQty=(id,d)=>persist(items.map(i=>i.id===id?{...i,qty:Math.max(1,i.qty+d)}:i));
+const cycPri=id=>{const o=["normal","urgent","optionnel"];persist(items.map(i=>i.id!==id?i:{...i,pri:o[(o.indexOf(i.pri)+1)%3]}))};
+
+const listItems=useMemo(()=>cl?items.filter(i=>i.lid===cl.id):[],[items,cl]);
+const boughtCount=useMemo(()=>listItems.filter(i=>i.bought).length,[listItems]);
+const remainCount=listItems.length-boughtCount;
+useEffect(()=>{if(listItems.length>0&&boughtCount===listItems.length&&!prevComp.current){setConfetti(true);notify(MOTIV[Math.floor(Math.random()*MOTIV.length)]);setTimeout(()=>setConfetti(false),3000);setHistory(p=>[{id:uid(),date:new Date().toLocaleDateString("fr-FR"),name:cl?.name,count:listItems.length,items:listItems.map(i=>i.name)},...p].slice(0,20))}prevComp.current=listItems.length>0&&boughtCount===listItems.length},[boughtCount,listItems.length]);
+
+const copyList=()=>{if(!cl)return;const li=listItems.filter(i=>!i.bought);const text=CATS.map(c=>{const ci=li.filter(i=>i.cat===c.id);if(!ci.length)return null;return c.emoji+" "+c.name+"\n"+ci.map(i=>"  • "+i.name+(i.qty>1?" x"+i.qty:"")).join("\n")}).filter(Boolean).join("\n\n");navigator.clipboard?.writeText("🛒 "+(cl?.name||"")+"\n\n"+text).then(()=>notify("📋 Copié !"))};
+
+const allR=useMemo(()=>[...RECIPES,...customR],[customR]);
+const matchR=useMemo(()=>{if(!cl)return[];const ln=listItems.map(i=>i.name.toLowerCase());return allR.map(r=>{const m=r.ingredients.filter(ig=>ln.some(n=>n.includes(ig.n.toLowerCase())||ig.n.toLowerCase().includes(n)));return{...r,mc:m.length,mp:Math.round((m.length/r.ingredients.length)*100)}}).filter(r=>r.mc>0).sort((a,b)=>b.mp-a.mp)},[listItems,allR]);
+const stats=useMemo(()=>{const allI=items.filter(i=>lists.some(l=>l.pid===cp?.id&&l.id===i.lid));const f={};allI.forEach(i=>{f[i.name]=(f[i.name]||0)+1});return{top5:Object.entries(f).sort((a,b)=>b[1]-a[1]).slice(0,5)}},[items,lists,cp]);
+const suggestions=useMemo(()=>{if(!cl||listItems.length<3)return[];const f={};items.filter(i=>lists.some(l=>l.pid===cp?.id&&l.id===i.lid)).forEach(i=>{f[i.name]=(f[i.name]||0)+1});const cur=listItems.map(i=>i.name);return Object.entries(f).filter(([n,c])=>c>=2&&!cur.includes(n)).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([n])=>n)},[items,listItems,cl,cp]);
+const myLists=lists.filter(l=>l.pid===cp?.id||l.shared);
+const startVoice=cb=>{const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){notify("Micro non supporté","warn");return}const r=new SR();r.lang="fr-FR";r.onresult=e=>cb(e.results[0][0].transcript);r.onerror=()=>notify("Erreur micro","warn");r.start();notify("🎤 Parle...")};
+
+// Quick add (comma separated)
+const doQuickAdd=()=>{if(!quickAdd.trim()||!cl)return;const names=quickAdd.split(",").map(s=>s.trim()).filter(Boolean);let added=0;const nI=[...items];
+  names.forEach(n=>{if(!nI.find(i=>i.lid===cl.id&&i.name.toLowerCase()===n.toLowerCase())){
+    const cat=Object.entries(PDB).find(([_,ps])=>ps.some(p=>p.toLowerCase()===n.toLowerCase()))?.[0]||"perso";
+    nI.push({id:uid(),name:n,cat,qty:1,note:"",pri:"normal",bought:false,lid:cl.id,at:Date.now()});added++}});
+  persist(nI);notify("✅ "+added+" ajouté(s)");setQuickAdd("");setShowQuickAdd(false)};
+
+// ═══ GEMINI CHAT ═══
+const cn=cp?.chefName||"Chef Nutri";
+const buildPrompt=()=>{const st=cp?.chefStyle||"cool";const tones={cool:"Tutoie, chaleureux.",coach:"Direct, motivant, pousse à se dépasser.",doux:"Très doux, patient, mots simples.",drole:"Drôle, verlan, familier, emojis."};
+  let p=`Tu es ${cn} 🧑‍🍳, expert ABSOLU cuisine/nutrition/diététique/coaching sportif. STYLE: ${tones[st]||tones.cool}
+COMPÉTENCES: Recettes (TOUJOURS calories+macros/portion), calculateur macros, plans repas 7j, coaching sport+alimentation, Ramadan/jeûne, alternatives ingrédients, lecture étiquettes nutritionnelles, hydratation.
+Si on dit "j'ai faim" → propose un truc rapide (<15min) avec ce qu'il y a dans la liste.
+Si on dit "merci chef" → réponse drôle style "Etchebest aurait pas fait mieux 😏"
+Si on dit "présente-toi" → re-présentation complète.
+Tu peux aussi CRÉER des recettes complètes avec ingrédients ET étapes.
+TOUJOURS en français. Réponses COMPLÈTES sans limite. Structure titres/listes/émojis.
+Fin de réponse: [SUGGESTIONS]\\n- Q1\\n- Q2`;
+  if(memory.length>0)p+="\n\nMÉMOIRE:\n"+memory.map(m=>"- "+m).join("\n");
+  if(cl&&listItems.length>0)p+="\n\n🛒 Liste: "+listItems.slice(0,25).map(i=>i.name).join(", ");
+  return p};
+const extractMem=txt=>{const l=txt.toLowerCase();if(["retiens","rentre en base","enregistre","note que","rappelle-toi","mémorise","je suis allergique","je ne mange pas","je suis végétarien","je pèse","mon objectif","je veux prendre","je veux perdre"].some(t=>l.includes(t))||/je (pèse|fais|mesure) \d+/i.test(l)){saveMem([...memory,txt]);return true}return false};
+const parseAI=t=>{const i=t.indexOf("[SUGGESTIONS]");if(i===-1)return{text:t,sugg:[]};return{text:t.slice(0,i).trim(),sugg:t.slice(i+13).split("\n").map(l=>l.replace(/^-\s*/,"").trim()).filter(l=>l.length>5)}};
+const sendChat=async msg=>{const txt=msg||chatIn.trim();if(!txt||chatLoad)return;
+  if(!apiKey){notify("Clé API → ⚙️","warn");return}
+  if(/pr[ée]sente[- ]toi/i.test(txt)){const wm=`🧑‍🍳 **Salut ! Moi c'est ${cn}.** Etchebest et Ramsay sont sympas mais entre nous... c'est moi qui leur envoie les recettes en DM 😏\n\n🍽️ **Recettes** avec calories & macros\n💪 **Coaching** masse/sèche/perte de poids\n🥗 **Nutrition** plans repas 7j, macros\n🛒 **Ta liste** recettes avec tes produits\n🌙 **Ramadan/Jeûne** je m'adapte\n📸 **Photo** envoie ton assiette, j'estime les calories\n\n💾 Dis "retiens que..." pour mémoriser tes infos\n\n_"présente-toi" pour revoir ce message_`;
+    setChatMsgs(p=>[...p,{role:"user",text:txt,ts:Date.now()},{role:"model",text:wm,ts:Date.now()}]);setChatIn("");return}
+  if(txt.toLowerCase()==="merci chef"){setChatMsgs(p=>[...p,{role:"user",text:txt,ts:Date.now()},{role:"model",text:"De rien, c'est cadeau de la maison 😏 Etchebest aurait pas fait mieux ! 🔥",ts:Date.now()}]);setChatIn("");return}
+  const um={role:"user",text:txt,ts:Date.now()};const nm=[...chatMsgs,um];setChatMsgs(nm);setChatIn("");setChatLoad(true);
+  if(extractMem(txt))notify("💾 Mémorisé !");
+  const models=["gemini-2.5-flash","gemini-2.0-flash","gemini-2.0-flash-lite"];
+  const contents=nm.filter(m=>m.role==="user"||m.role==="model").slice(-20).map(m=>({role:m.role==="user"?"user":"model",parts:[{text:m.text||"..."}]}));
+  try{let res=null;for(const model of models){try{res=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+model+":generateContent?key="+apiKey,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({system_instruction:{parts:[{text:buildPrompt()}]},contents,generationConfig:{maxOutputTokens:8192,temperature:0.8}})});if(res.ok)break;if(res.status===404||res.status===400){res=null;continue}break}catch(e){res=null;continue}}
+    if(!res){setChatMsgs(p=>[...p,{role:"model",text:"❌ Aucun modèle. Vérifie ta clé ⚙️",ts:Date.now()}]);setChatLoad(false);return}
+    if(!res.ok){let em="❌ Erreur "+res.status;if(res.status===429)em="⏳ Trop de requêtes, 1min";setChatMsgs(p=>[...p,{role:"model",text:em,ts:Date.now()}]);setChatLoad(false);return}
+    const data=await res.json();const raw=data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    if(!raw){setChatMsgs(p=>[...p,{role:"model",text:"Pas de réponse, réessaie !",ts:Date.now()}])}
+    else{const{text:aiT,sugg}=parseAI(raw);setChatMsgs(p=>[...p,{role:"model",text:aiT,sugg,ts:Date.now()}])}
+  }catch(e){setChatMsgs(p=>[...p,{role:"model",text:"❌ Erreur réseau",ts:Date.now()}])}setChatLoad(false)};
+useEffect(()=>{chatEndRef.current?.scrollIntoView({behavior:"smooth"})},[chatMsgs,chatLoad]);
+const renderMd=t=>{if(!t)return"";return t.split("\n").map((l,i)=>{if(l.startsWith("### "))return h("h4",{key:i,style:{margin:"6px 0 3px",fontSize:13,color:T.accent}},l.slice(4));if(l.startsWith("## "))return h("h3",{key:i,style:{margin:"8px 0 3px",fontSize:14,color:T.accent}},l.slice(3));if(l.startsWith("- ")||l.startsWith("* "))return h("div",{key:i,style:{paddingLeft:12,margin:"2px 0"}},"• "+l.slice(2));if(l.match(/^\d+\. /))return h("div",{key:i,style:{paddingLeft:12,margin:"2px 0"}},l);if(l.trim()==="")return h("br",{key:i});const ps=l.split(/\*\*(.*?)\*\*/g);if(ps.length>1)return h("p",{key:i,style:{margin:"2px 0",lineHeight:1.5}},ps.map((p,j)=>j%2===1?h("strong",{key:j},p):p));return h("p",{key:i,style:{margin:"2px 0",lineHeight:1.5}},l)})};
+
+// ═══ STYLES ═══
+const s={box:{fontFamily:"'Nunito',sans-serif",background:T.bg,minHeight:"100vh",maxWidth:480,margin:"0 auto",color:T.text,paddingBottom:70},hdr:{background:T.hBg,padding:"12px 16px 8px",borderBottom:"1px solid "+T.border,position:"sticky",top:0,zIndex:100,boxShadow:T.sh},card:{background:T.card,borderRadius:14,padding:"12px 14px",marginBottom:8,boxShadow:T.sh},btn:(bg,c)=>({padding:"9px 16px",border:"none",borderRadius:10,background:bg,color:c||"#FFF",fontWeight:700,fontSize:13,cursor:"pointer"}),inp:{width:"100%",padding:"9px 12px",border:"1.5px solid "+T.border,borderRadius:10,background:T.iBg,color:T.text,fontSize:14,outline:"none",boxSizing:"border-box"},modal:{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,.5)",zIndex:200,display:"flex",alignItems:"flex-end",justifyContent:"center"},mCont:{background:T.card,borderRadius:"20px 20px 0 0",padding:20,width:"100%",maxWidth:480,maxHeight:"85vh",overflow:"auto",color:T.text},badge:c=>({display:"inline-block",padding:"2px 8px",borderRadius:20,fontSize:10,fontWeight:700,background:c+"22",color:c}),notif:t=>({position:"fixed",top:16,left:"50%",transform:"translateX(-50%)",padding:"9px 18px",borderRadius:12,background:t==="warn"?"#FF9800":"#4CAF50",color:"#FFF",fontWeight:700,fontSize:13,zIndex:9999,boxShadow:"0 4px 20px rgba(0,0,0,.2)",animation:"sd .3s ease",maxWidth:"90%",textAlign:"center"})};
+
+// ═══ SPLASH / PIN / PROFILE ═══
+if(splash)return h("div",{style:{...s.box,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",background:splash.bg,overflow:"hidden",paddingBottom:0}},
+  h("div",{style:{position:"absolute",top:0,left:0,right:0,bottom:0,background:"radial-gradient(circle at 30% 40%,rgba(255,255,255,.08) 0%,transparent 60%)"}}),
+  h("div",{style:{fontSize:70,marginBottom:24,animation:"pulse 1.2s infinite, splashIn .6s ease"}},splash.icon),
+  h("div",{style:{fontWeight:900,fontSize:26,color:"#FFF",textAlign:"center",textShadow:"0 3px 15px rgba(0,0,0,.4)",padding:"0 30px",animation:"splashIn .6s ease"}},splash.text),
+  splash.sub&&h("div",{style:{fontWeight:600,fontSize:15,color:"rgba(255,255,255,.85)",textAlign:"center",padding:"0 40px",marginTop:16,animation:"splashIn .8s ease"}},splash.sub));
+
+if(pinTarg)return h("div",{style:{...s.box,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:30,minHeight:"100vh",paddingBottom:0}},
+  h("div",{style:{fontSize:48,marginBottom:16}},"🔒"),h("div",{style:{fontWeight:700,fontSize:18,marginBottom:20}},"PIN pour "+pinTarg.name),
+  h("input",{style:{...s.inp,maxWidth:200,textAlign:"center",fontSize:24,letterSpacing:8},type:"password",maxLength:4,value:pinIn,autoFocus:true,onChange:e=>{const v=e.target.value.replace(/\D/g,"");setPinIn(v);if(v.length>0&&v===pinTarg.pin){setPinIn("");setPinTarg(null);loginProfile(pinTarg)}else if(pinTarg.pin&&v.length===pinTarg.pin.length&&v!==pinTarg.pin){notify("❌ Incorrect","warn");setPinIn("")}}}),
+  h("button",{style:{...s.btn(T.border,T.text),marginTop:16},onClick:()=>{setPinTarg(null);setPinIn("")}},"← Retour"));
+
+if(!cp)return h("div",{style:{...s.box,padding:24,minHeight:"100vh",animation:"appOpen .4s ease",paddingBottom:0}},
+  h("div",{style:{textAlign:"center",marginBottom:24}},h("div",{style:{fontSize:44,marginBottom:8}},"🛒"),h("div",{style:{fontWeight:900,fontSize:22}},"Mes Courses"),h("div",{style:{color:"#666",fontSize:13}},"Choisis ton profil")),
+  profiles.map(p=>h("div",{key:p.id,onClick:()=>{if(p.pin){setPinTarg(p)}else loginProfile(p)},style:{...s.card,display:"flex",alignItems:"center",gap:12,cursor:"pointer",padding:"14px 16px"}},
+    h("div",{style:{fontSize:28,width:44,height:44,borderRadius:"50%",background:(p.color||"#FF6B35")+"22",display:"flex",alignItems:"center",justifyContent:"center"}},p.avatar||"😎"),
+    h("div",{style:{flex:1}},h("div",{style:{fontWeight:700,fontSize:16}},p.name),p.pin&&h("div",{style:{fontSize:11,color:"#999"}},"🔒 PIN")),h("div",{style:{fontSize:20,color:"#999"}},"→"))),
+  h("div",{style:{marginTop:12,...s.card}},
+    h("div",{style:{fontWeight:700,marginBottom:8}},"Nouveau profil"),
+    h("input",{style:{...s.inp,marginBottom:8},placeholder:"Prénom...",value:newName,onChange:e=>setNewName(e.target.value)}),
+    h("input",{style:{...s.inp,marginBottom:8},placeholder:"PIN (0-4 chiffres)",type:"password",maxLength:4,value:newPin,onChange:e=>setNewPin(e.target.value.replace(/\D/g,""))}),
+    h("button",{style:{...s.btn("#FF6B35"),width:"100%"},onClick:()=>{if(!newName.trim())return;const np={id:uid(),name:newName.trim(),pin:newPin||"",avatar:"😎",color:"#FF6B35",chefName:"Chef Nutri",chefStyle:"cool"};const nl={id:uid(),pid:np.id,name:"Ma liste"};persist(undefined,[...lists,nl],[...profiles,np]);loginProfile(np);setNewName("");setNewPin("")}},"Créer")),
+  h("button",{onClick:loginGuest,style:{...s.btn("#78909C"),width:"100%",marginTop:8,fontSize:12}},"👤 Mode invité (sans profil)"));
+
+// ═══ HOME ═══
+const homeTab=()=>{const pct=listItems.length>0?boughtCount/listItems.length:0;
+  return h("div",{style:{padding:"10px 14px 20px"}},
+    h("div",{style:{...s.card,padding:16,background:T.accent+"11"}},
+      h("div",{style:{fontWeight:900,fontSize:18}},(cp?.avatar||"")+" Salut "+cp?.name+" !"),
+      cl&&h("div",{style:{marginTop:10}},h("div",{style:{display:"flex",justifyContent:"space-between",fontSize:13}},h("span",null,"📋 "+cl.name),h("span",{style:{color:T.accent,fontWeight:700}},boughtCount+"/"+listItems.length)),
+        h("div",{style:{height:6,borderRadius:3,background:T.iBg,overflow:"hidden",marginTop:4}},h("div",{style:{height:"100%",width:pct*100+"%",background:"linear-gradient(90deg,"+T.accent+",#FF9800)",borderRadius:3}})))),
+    // Timer
+    timerLeft>0&&h("div",{style:{...s.card,textAlign:"center",background:"#FFF3E0"}},h("div",{style:{fontSize:28,fontWeight:900,color:T.accent}},fmtTime(timerLeft)),h("button",{onClick:()=>{clearInterval(timerRef.current);setTimerLeft(0);setTimer(null)},style:{...s.btn("#E53935"),fontSize:11,marginTop:4}},"Arrêter")),
+    // Quick add
+    h("div",{style:{display:"flex",gap:4,marginBottom:8}},
+      h("button",{onClick:()=>setShowQuickAdd(!showQuickAdd),style:{...s.btn(T.accent),flex:1,fontSize:12}},"⚡ Ajout rapide"),
+      h("button",{onClick:()=>sendChat("J'ai faim ! Propose-moi un truc rapide avec ce que j'ai dans ma liste"),style:{...s.btn(T.iBg,T.text),flex:1,fontSize:12},disabled:!apiKey},"🍽️ J'ai faim !")),
+    showQuickAdd&&h("div",{style:{...s.card}},
+      h("div",{style:{fontSize:12,color:T.ts,marginBottom:4}},"Tape les produits séparés par des virgules :"),
+      h("div",{style:{display:"flex",gap:4}},h("input",{style:{...s.inp,flex:1},placeholder:"Lait, œufs, pain...",value:quickAdd,onChange:e=>setQuickAdd(e.target.value),onKeyDown:e=>{if(e.key==="Enter")doQuickAdd()}}),h("button",{style:s.btn(T.accent),onClick:doQuickAdd},"Ajouter"))),
+    suggestions.length>0&&h("div",{style:s.card},h("div",{style:{fontWeight:700,fontSize:13,marginBottom:6}},"💡 Tu as oublié ?"),h("div",{style:{display:"flex",flexWrap:"wrap",gap:4}},suggestions.map(n=>h("button",{key:n,onClick:()=>{const cat=Object.entries(PDB).find(([_,ps])=>ps.includes(n))?.[0]||"perso";toggleCat(n,cat)},style:{...s.btn(T.iBg,T.text),fontSize:11,padding:"5px 10px",borderRadius:20}},"+  "+n)))),
+    seas.length>0&&h("div",{style:{...s.card,background:"#E8F5E9",border:"1px solid #A5D6A7"}},h("div",{style:{fontWeight:700,fontSize:13,color:"#2E7D32"}},"🌿 De saison : "+seas.join(" • "))),
+    h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}},
+      [{l:"🏪 Catalogue",t:"catalogue"},{l:"🍳 Recettes",t:"recipes"},{l:"🧑‍🍳 "+cn,t:"chat"},{l:"📋 Mes Listes",t:"listes"}].map(x=>h("button",{key:x.t,onClick:()=>setTab(x.t),style:{...s.card,textAlign:"center",cursor:"pointer",fontWeight:700,fontSize:13,padding:14}},x.l))),
+    stats.top5.length>0&&h("div",{style:{...s.card,marginTop:4}},h("div",{style:{fontWeight:700,fontSize:13}},"📊 Top : "+stats.top5.map(x=>x[0]).join(", "))),
+    history.length>0&&h("div",{style:s.card},h("div",{style:{fontWeight:700,fontSize:13}},"🕐 "+history[0].date+" — "+history[0].count+" articles"),h("button",{onClick:()=>{if(!cl)return;const nI=[...items];history[0].items.forEach(n=>{if(!nI.find(i=>i.lid===cl.id&&i.name===n)){const cat=Object.entries(PDB).find(([_,ps])=>ps.includes(n))?.[0]||"perso";nI.push({id:uid(),name:n,cat,qty:1,note:"",pri:"normal",bought:false,lid:cl.id,at:Date.now()})}});persist(nI);notify("♻️ OK !")},style:{...s.btn(T.accent),marginTop:4,fontSize:11,padding:"4px 10px"}},"♻️ Refaire")))};
+
+// ═══ CATALOGUE ═══
+const catalogueTab=()=>{const isSeas=n=>seas.some(ss=>n.toLowerCase().includes(ss.toLowerCase()));const fC=filterCat?CATS.filter(c=>c.id===filterCat):CATS;
+  return h("div",{style:{padding:"10px 14px 20px"}},
+    cl&&h("div",{style:{padding:"6px 14px",background:T.accent+"11",borderRadius:10,marginBottom:8}},h("span",{style:{fontWeight:800,fontSize:13,color:T.accent}},cl.name+" — "+listItems.length+" articles")),
+    h("div",{style:{display:"flex",gap:4,marginBottom:8}},h("input",{style:{...s.inp,flex:1},placeholder:"🔍 Rechercher...",value:search,onChange:e=>setSearch(e.target.value)}),h("button",{onClick:()=>startVoice(t=>setSearch(t)),style:{...s.btn(T.iBg,T.text),padding:"8px"}},"🎤")),
+    h("div",{style:{display:"flex",gap:3,overflowX:"auto",paddingBottom:6}},
+      h("button",{onClick:()=>setFilterCat(null),style:{...s.btn(!filterCat?T.accent:T.iBg,!filterCat?"#FFF":T.text),fontSize:10,padding:"4px 8px"}},"Tout"),
+      CATS.map(c=>h("button",{key:c.id,onClick:()=>setFilterCat(filterCat===c.id?null:c.id),style:{...s.btn(filterCat===c.id?c.color:T.iBg,filterCat===c.id?"#FFF":T.text),fontSize:10,padding:"4px 8px"}},c.emoji))),
+    h("button",{onClick:()=>{setHiddenProds([]);notify("🔄 Restauré !")},style:{...s.btn(T.iBg,T.text),width:"100%",marginBottom:8,fontSize:11}},"🔄 Réinitialiser le catalogue"),
+    fC.map(c=>{
+      if(c.id==="perso")return h("div",{key:"perso",style:{marginBottom:10}},
+        h("div",{style:{display:"flex",alignItems:"center",gap:6,padding:"6px 0",borderBottom:"2px solid "+c.color,marginBottom:6}},h("span",{style:{fontSize:16}},c.emoji),h("span",{style:{fontWeight:800,fontSize:13,color:c.color}},c.name)),
+        h("div",{style:{display:"flex",gap:4,marginBottom:6}},
+          h("input",{style:{...s.inp,flex:1},placeholder:"Produit perso...",value:newPerso.name,onChange:e=>setNewPerso({...newPerso,name:e.target.value}),onKeyDown:e=>{if(e.key==="Enter"&&newPerso.name.trim()){setPersoProds(p=>[...p,{name:newPerso.name.trim(),emoji:newPerso.emoji}]);setNewPerso({name:"",emoji:"📦"})}}}),
+          h("select",{style:{...s.inp,width:48,padding:3},value:newPerso.emoji,onChange:e=>setNewPerso({...newPerso,emoji:e.target.value})},["📦","📄","💡","🔧","🧴","👕","🎮","🏠","📱","✏️"].map(e=>h("option",{key:e,value:e},e))),
+          h("button",{style:s.btn(T.accent),onClick:()=>{if(newPerso.name.trim()){setPersoProds(p=>[...p,{name:newPerso.name.trim(),emoji:newPerso.emoji}]);setNewPerso({name:"",emoji:"📦"})}}},"+")
+        ),
+        persoProds.map((p,i)=>{const inL=isInList(p.name,"perso");return h("div",{key:i,style:{display:"flex",alignItems:"center",gap:8,padding:"7px 12px",background:inL?T.accent+"11":T.card,borderRadius:10,marginBottom:3}},
+          h("div",{onClick:()=>toggleCat(p.name,"perso"),style:{flex:1,display:"flex",alignItems:"center",gap:8,cursor:"pointer"}},
+            h("div",{style:{width:20,height:20,borderRadius:5,border:"2px solid "+(inL?T.accent:T.border),background:inL?T.accent:"transparent",display:"flex",alignItems:"center",justifyContent:"center"}},inL&&h("span",{style:{color:"#FFF",fontSize:12}},"✓")),
+            h("span",{style:{fontSize:13}},p.emoji+" "+p.name)),
+          h("button",{onClick:()=>setPersoProds(persoProds.filter((_,j)=>j!==i)),style:{background:"none",border:"none",color:"#E53935",cursor:"pointer"}},"✕"))}));
+      let prods=PDB[c.id]||[];if(search)prods=prods.filter(p=>p.toLowerCase().includes(search.toLowerCase()));
+      prods=prods.filter(p=>!hiddenProds.includes(c.id+":"+p));if(!prods.length)return null;
+      return h("div",{key:c.id,style:{marginBottom:10}},
+        h("div",{style:{display:"flex",alignItems:"center",gap:6,padding:"6px 0",borderBottom:"2px solid "+c.color,marginBottom:6}},h("span",{style:{fontSize:16}},c.emoji),h("span",{style:{fontWeight:800,fontSize:13,color:c.color}},c.name),h("span",{style:{fontSize:10,color:T.ts}},"("+prods.length+")")),
+        prods.map(p=>{const inL=isInList(p,c.id);return h("div",{key:p,style:{display:"flex",alignItems:"center",gap:8,padding:"7px 12px",background:inL?T.accent+"11":T.card,borderRadius:10,marginBottom:3}},
+          h("div",{onClick:()=>toggleCat(p,c.id),style:{flex:1,display:"flex",alignItems:"center",gap:8,cursor:"pointer"}},
+            h("div",{style:{width:20,height:20,borderRadius:5,border:"2px solid "+(inL?T.accent:T.border),background:inL?T.accent:"transparent",display:"flex",alignItems:"center",justifyContent:"center"}},inL&&h("span",{style:{color:"#FFF",fontSize:12}},"✓")),
+            h("span",{style:{fontSize:13,fontWeight:inL?700:400}},(isSeas(p)?"🌿 ":"")+p)),
+          h("button",{onClick:()=>{setHiddenProds(hp=>[...hp,c.id+":"+p])},style:{background:"none",border:"none",color:"#ddd",cursor:"pointer",fontSize:11}},"✕"))}))
+    })
+  )};
+
+// ═══ RECIPES ═══
+const recipesTab=()=>{const fvR=allR.filter(r=>favR.includes(r.name));const dsp=rTab==="fav"?fvR:rTab==="match"?matchR:allR;
+  const dR=dsp.filter(r=>(!rS||r.name.toLowerCase().includes(rS.toLowerCase()))&&(rCatF==="all"||r.cat===rCatF));
+  return h("div",{style:{padding:"10px 14px 20px"}},
+    h("div",{style:{display:"flex",gap:3,marginBottom:6}},
+      [{id:"all",l:"📖 Toutes"},{id:"fav",l:"⭐ "+fvR.length},{id:"match",l:"🍳 Match"}].map(t=>h("button",{key:t.id,onClick:()=>setRTab(t.id),style:{...s.btn(rTab===t.id?T.accent:T.iBg,rTab===t.id?"#FFF":T.text),fontSize:10,flex:1}},t.l))),
+    h("div",{style:{display:"flex",gap:3,marginBottom:6,overflowX:"auto"}},
+      [{id:"all",l:"Tout"},...RCATS.map(c=>({id:c,l:c}))].map(t=>h("button",{key:t.id,onClick:()=>setRCatF(t.id),style:{...s.btn(rCatF===t.id?T.accent:T.iBg,rCatF===t.id?"#FFF":T.text),fontSize:9,padding:"3px 6px",whiteSpace:"nowrap"}},t.l))),
+    h("input",{style:{...s.inp,marginBottom:8},placeholder:"🔍 Chercher...",value:rS,onChange:e=>setRS(e.target.value)}),
+    dR.map((r,i)=>h("div",{key:i,style:{...s.card,display:"flex",alignItems:"center",gap:8}},
+      h("div",{onClick:()=>{setRServ(r.servings);setShowRecipe(r)},style:{display:"flex",alignItems:"center",gap:8,flex:1,cursor:"pointer"}},h("span",{style:{fontSize:22}},r.emoji),h("div",null,h("div",{style:{fontWeight:700,fontSize:12}},r.name),h("div",{style:{fontSize:10,color:T.ts}},r.servings+"p"+(r.mp?" • "+r.mp+"%":"")+(ratings[r.name]?" • "+("⭐".repeat(ratings[r.name])):""))))),
+      h("button",{onClick:()=>{const nf=favR.includes(r.name)?favR.filter(x=>x!==r.name):[...favR,r.name];persist(undefined,undefined,undefined,undefined,nf)},style:{background:"none",border:"none",fontSize:14,cursor:"pointer"}},favR.includes(r.name)?"⭐":"☆"),
+      customR.find(cr=>cr.name===r.name)&&h("button",{onClick:()=>persist(undefined,undefined,undefined,customR.filter(cr=>cr.name!==r.name)),style:{background:"none",border:"none",fontSize:12,cursor:"pointer",color:"#E53935"}},"✕"))),
+    dR.length===0&&h("div",{style:{textAlign:"center",padding:20,color:T.ts}},"Aucune recette"),
+    h("button",{onClick:()=>setShowNewR(true),style:{...s.btn(T.accent),width:"100%",marginTop:8}},"+ Créer"),
+    showNewR&&h("div",{style:{...s.card,marginTop:8}},
+      h("input",{style:{...s.inp,marginBottom:4},placeholder:"Nom",value:newR.name,onChange:e=>setNewR({...newR,name:e.target.value})}),
+      h("div",{style:{display:"flex",gap:4,marginBottom:4}},h("select",{style:{...s.inp,flex:1,fontSize:12},value:newR.cat,onChange:e=>setNewR({...newR,cat:e.target.value})},RCATS.map(c=>h("option",{key:c,value:c},c))),h("input",{style:{...s.inp,width:50},placeholder:"🍽️",value:newR.emoji,onChange:e=>setNewR({...newR,emoji:e.target.value})}),h("input",{style:{...s.inp,width:50},type:"number",value:newR.servings,onChange:e=>setNewR({...newR,servings:+e.target.value})})),
+      h("div",{style:{fontSize:11,fontWeight:700,marginTop:4}},"Ingrédients:"),
+      newR.ingredients.map((ig,i)=>h("div",{key:i,style:{fontSize:11,display:"flex",justifyContent:"space-between"}},h("span",null,ig.n+" — "+ig.q+ig.u),h("button",{onClick:()=>setNewR({...newR,ingredients:newR.ingredients.filter((_,j)=>j!==i)}),style:{background:"none",border:"none",color:"#E53935",cursor:"pointer"}},"✕"))),
+      h("div",{style:{display:"flex",gap:3,marginTop:4}},h("input",{style:{...s.inp,flex:2},placeholder:"Ingr.",value:newIng.n,onChange:e=>setNewIng({...newIng,n:e.target.value})}),h("input",{style:{...s.inp,flex:1},placeholder:"Qté",value:newIng.q,onChange:e=>setNewIng({...newIng,q:e.target.value})}),h("input",{style:{...s.inp,flex:1},placeholder:"U",value:newIng.u,onChange:e=>setNewIng({...newIng,u:e.target.value})}),h("button",{onClick:()=>{if(newIng.n){setNewR({...newR,ingredients:[...newR.ingredients,{...newIng,q:+newIng.q||1}]});setNewIng({n:"",q:"",u:""})}},style:s.btn(T.accent)},"+")
+      ),
+      h("div",{style:{fontSize:11,fontWeight:700,marginTop:6}},"Étapes:"),
+      newR.steps.map((st,i)=>h("div",{key:i,style:{fontSize:11,display:"flex",justifyContent:"space-between"}},h("span",null,(i+1)+". "+st),h("button",{onClick:()=>setNewR({...newR,steps:newR.steps.filter((_,j)=>j!==i)}),style:{background:"none",border:"none",color:"#E53935",cursor:"pointer"}},"✕"))),
+      h("div",{style:{display:"flex",gap:3,marginTop:4}},h("input",{style:{...s.inp,flex:1},placeholder:"Étape...",value:newStep,onChange:e=>setNewStep(e.target.value),onKeyDown:e=>{if(e.key==="Enter"&&newStep.trim()){setNewR({...newR,steps:[...newR.steps,newStep.trim()]});setNewStep("")}}}),h("button",{onClick:()=>{if(newStep.trim()){setNewR({...newR,steps:[...newR.steps,newStep.trim()]});setNewStep("")}},style:s.btn(T.accent)},"+")
+      ),
+      h("button",{style:{...s.btn("#4CAF50"),width:"100%",marginTop:8},onClick:()=>{if(!newR.name||!newR.ingredients.length)return;persist(undefined,undefined,undefined,[...customR,{...newR}]);setNewR({name:"",emoji:"🍽️",cat:"🍽️ Déjeuner",servings:4,ingredients:[],steps:[]});setShowNewR(false);notify("🍳 Créée !")}},"Sauvegarder")))};
+
+// ═══ CHAT ═══
+const chatTab=()=>h("div",{style:{display:"flex",flexDirection:"column",height:"calc(100vh - 130px)"}},
+  h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 14px",borderBottom:"1px solid "+T.border}},
+    !apiKey?h("a",{href:"https://aistudio.google.com/apikey",target:"_blank",style:{fontSize:11,color:T.accent}},"⚠️ Clé → ⚙️"):memory.length>0?h("span",{style:{fontSize:10,color:T.accent}},"🧠 "+memory.length):h("span",null),
+    h("button",{onClick:()=>sendChat("présente-toi"),style:{...s.btn(T.iBg,T.text),padding:"3px 8px",fontSize:10}},"❓")),
+  h("div",{style:{flex:1,overflow:"auto",padding:"10px 14px"}},
+    chatMsgs.length===0&&h("div",{style:{textAlign:"center",padding:"20px 14px",color:T.ts}},
+      h("div",{style:{fontSize:40,marginBottom:8}},"🧑‍🍳"),h("div",{style:{fontWeight:700,fontSize:15,color:T.text,marginBottom:12}},cn),
+      h("div",{style:{display:"flex",flexWrap:"wrap",gap:4,justifyContent:"center"}},
+        ["Programme prise de masse","J'ai faim !","Plan repas 7 jours","Comment lire une étiquette ?"].map(q=>h("button",{key:q,onClick:()=>sendChat(q),style:{...s.btn(T.iBg,T.text),fontSize:10,padding:"5px 8px",borderRadius:20}},q)))),
+    chatMsgs.map((m,i)=>h("div",{key:i},
+      h("div",{style:{display:"flex",justifyContent:m.role==="user"?"flex-end":"flex-start",marginBottom:4}},
+        h("div",{style:{maxWidth:"85%",padding:"10px 14px",borderRadius:m.role==="user"?"14px 14px 4px 14px":"14px 14px 14px 4px",background:m.role==="user"?T.accent:T.card,color:m.role==="user"?"#FFF":T.text,fontSize:13,boxShadow:T.sh,wordBreak:"break-word"}},m.role==="user"?m.text:renderMd(m.text))),
+      m.sugg&&m.sugg.length>0&&h("div",{style:{display:"flex",flexWrap:"wrap",gap:3,marginBottom:6,paddingLeft:4}},m.sugg.map((sg,j)=>h("button",{key:j,onClick:()=>sendChat(sg),style:{...s.btn(T.iBg,T.text),fontSize:10,padding:"4px 8px",borderRadius:20}},sg))))),
+    chatLoad&&h("div",{style:{display:"flex",marginBottom:8}},h("div",{style:{padding:"12px 18px",borderRadius:14,background:T.card,boxShadow:T.sh}},h("span",{className:"tdot",style:{background:T.accent}}),h("span",{className:"tdot",style:{background:T.accent,animationDelay:".2s"}}),h("span",{className:"tdot",style:{background:T.accent,animationDelay:".4s"}}))),
+    h("div",{ref:chatEndRef})),
+  h("div",{style:{padding:"8px 14px",borderTop:"1px solid "+T.border,background:T.hBg,display:"flex",gap:5}},
+    h("button",{onClick:()=>{if(confirm("Effacer ?")){setChatMsgs([]);if(cp)LS.set("ch_"+cp.id,[])}},style:{background:"none",border:"none",fontSize:15,cursor:"pointer"}},"🗑️"),
+    h("button",{onClick:()=>startVoice(t=>setChatIn(p=>p+t)),style:{background:"none",border:"none",fontSize:15,cursor:"pointer"}},"🎤"),
+    h("input",{style:{...s.inp,flex:1},placeholder:"Pose ta question...",value:chatIn,onChange:e=>setChatIn(e.target.value),onKeyDown:e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendChat()}}}),
+    h("button",{onClick:()=>sendChat(),disabled:chatLoad||!chatIn.trim(),style:{...s.btn(T.accent),opacity:chatLoad||!chatIn.trim()?.5:1}},"➤")));
+
+// ═══ MES LISTES ═══
+const listesTab=()=>{let fI=listItems;if(listSearch)fI=fI.filter(i=>i.name.toLowerCase().includes(listSearch.toLowerCase()));if(listFilterCat)fI=fI.filter(i=>i.cat===listFilterCat);if(!showBought)fI=fI.filter(i=>!i.bought);
+  const sorted=[...fI].sort((a,b)=>CATS.findIndex(c=>c.id===a.cat)-CATS.findIndex(c=>c.id===b.cat));
+  const grp={};CATS.forEach(c=>{grp[c.id]=[]});sorted.forEach(i=>{if(grp[i.cat])grp[i.cat].push(i)});
+  const pct=listItems.length>0?boughtCount/listItems.length:0;
+  return h("div",{style:{padding:"10px 14px 20px"}},
+    h("div",{style:{display:"flex",gap:3,overflowX:"auto",marginBottom:8}},myLists.map(l=>h("button",{key:l.id,onClick:()=>setCl(l),style:{...s.btn(cl?.id===l.id?T.accent:T.iBg,cl?.id===l.id?"#FFF":T.text),fontSize:11,whiteSpace:"nowrap",padding:"5px 10px"}},l.name+" ("+items.filter(i=>i.lid===l.id).length+")")),h("button",{onClick:()=>setShowListM(true),style:{...s.btn(T.iBg,T.text),fontSize:11,padding:"5px 10px"}},"+")),
+    showListM&&h("div",{style:{...s.card,marginBottom:8}},h("input",{style:{...s.inp,marginBottom:6},placeholder:"Nom...",value:newName,onChange:e=>setNewName(e.target.value)}),h("div",{style:{display:"flex",gap:6}},h("button",{style:s.btn(T.accent),onClick:()=>{if(!newName.trim())return;const nl={id:uid(),pid:cp.id,name:newName.trim()};persist(undefined,[...lists,nl]);setCl(nl);setNewName("");setShowListM(false)}},"Créer"),h("button",{style:s.btn(T.border,T.text),onClick:()=>setShowListM(false)},"Annuler"))),
+    cl&&h("div",{style:{...s.card,padding:12}},h("div",{style:{display:"flex",justifyContent:"space-between",fontSize:13}},h("span",{style:{fontWeight:700}},cl.name),h("span",{style:{color:T.accent,fontWeight:700}},boughtCount+"/"+listItems.length)),h("div",{style:{height:6,borderRadius:3,background:T.iBg,overflow:"hidden",marginTop:4}},h("div",{style:{height:"100%",width:pct*100+"%",background:"linear-gradient(90deg,"+T.accent+",#FF9800)",borderRadius:3}}))),
+    cl&&listItems.length>0&&h("div",{style:{display:"flex",gap:3,marginBottom:6,flexWrap:"wrap"}},
+      h("button",{onClick:()=>setStoreMode(!storeMode),style:{...s.btn(storeMode?"#4CAF50":T.iBg,storeMode?"#FFF":T.text),fontSize:10}},storeMode?"🏪 ✓":"🏪"),
+      h("button",{onClick:()=>persist(items.map(i=>i.lid===cl.id?{...i,bought:false}:i)),style:{...s.btn(T.iBg,T.text),fontSize:10}},"↩️"),
+      h("button",{onClick:()=>{const n=prompt("Nom ?",cl.name+" (copie)");if(!n)return;const nl={id:uid(),pid:cp.id,name:n};persist([...items,...listItems.map(i=>({...i,id:uid(),lid:nl.id,bought:false}))],[...lists,nl]);setCl(nl)},style:{...s.btn(T.iBg,T.text),fontSize:10}},"📑"),
+      h("button",{style:{...s.btn(T.iBg,T.text),fontSize:10},onClick:copyList},"📋")),
+    // Store mode
+    cl&&storeMode&&sorted.filter(i=>!i.bought).map(it=>h("div",{key:it.id,onClick:()=>toggleBought(it.id),style:{display:"flex",alignItems:"center",gap:12,padding:"14px 16px",background:T.card,borderRadius:14,marginBottom:6,cursor:"pointer",boxShadow:T.sh,borderLeft:"4px solid "+(CATS.find(c=>c.id===it.cat)?.color||"#999")}},h("span",{style:{fontSize:16,fontWeight:700,flex:1}},it.name),it.qty>1&&h("span",{style:{color:T.accent,fontWeight:700}},"x"+it.qty))),
+    // Normal mode
+    cl&&!storeMode&&listItems.length>0&&h("div",null,
+      h("div",{style:{display:"flex",gap:6,marginBottom:6}},h("input",{style:{...s.inp,flex:1},placeholder:"🔍",value:listSearch,onChange:e=>setListSearch(e.target.value)}),h("button",{onClick:()=>setShowBought(!showBought),style:{...s.btn(showBought?T.iBg:T.accent,showBought?T.text:"#FFF"),fontSize:10}},showBought?"Tout":"À acheter")),
+      CATS.map(c=>{const ci=grp[c.id];if(!ci?.length)return null;
+        return h("div",{key:c.id,style:{marginBottom:6}},
+          h("div",{style:{display:"flex",alignItems:"center",gap:6,padding:"4px 0",borderBottom:"2px solid "+c.color,marginBottom:4}},h("span",{style:{fontSize:14}},c.emoji),h("span",{style:{fontWeight:800,fontSize:12,color:c.color}},c.name)),
+          ci.map(it=>h("div",{key:it.id,style:{...s.card,padding:"8px 12px",borderLeft:it.pri==="urgent"?"3px solid #E53935":it.pri==="optionnel"?"3px solid #BDBDBD":"none"},className:bounceId===it.id?"bounce":""},
+            h("div",{style:{display:"flex",alignItems:"center",gap:8}},
+              h("div",{onClick:()=>toggleBought(it.id),style:{width:20,height:20,borderRadius:5,border:"2px solid "+(it.bought?"#4CAF50":T.border),background:it.bought?"#4CAF50":"transparent",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}},it.bought&&h("span",{style:{color:"#FFF",fontSize:12}},"✓")),
+              h("div",{style:{flex:1}},h("div",{style:{fontWeight:600,textDecoration:it.bought?"line-through":"none",color:it.bought?T.ts:T.text,fontSize:13}},it.name)),
+              h("div",{style:{display:"flex",alignItems:"center",gap:2}},
+                h("button",{onClick:()=>updQty(it.id,-1),style:{width:20,height:20,borderRadius:4,border:"1px solid "+T.border,background:T.iBg,cursor:"pointer",fontSize:11,color:T.text}},"−"),
+                h("span",{style:{fontWeight:700,fontSize:12,minWidth:14,textAlign:"center"}},it.qty),
+                h("button",{onClick:()=>updQty(it.id,1),style:{width:20,height:20,borderRadius:4,border:"1px solid "+T.border,background:T.iBg,cursor:"pointer",fontSize:11,color:T.text}},"+")
+              ),
+              h("button",{onClick:()=>cycPri(it.id),style:{background:"none",border:"none",fontSize:12,cursor:"pointer"}},it.pri==="urgent"?"🔴":it.pri==="optionnel"?"⚪":"🟢"),
+              h("button",{onClick:()=>removeI(it.id),style:{background:"none",border:"none",fontSize:12,cursor:"pointer",color:"#E53935"}},"✕")))))})),
+    cl&&listItems.length>0&&h("button",{style:{...s.btn("#E53935"),width:"100%",marginTop:8,fontSize:12},onClick:()=>{if(confirm("Retirer achetés ?")){persist(items.filter(i=>i.lid!==cl.id||!i.bought));notify("🧹 OK")}}},"🗑️ Vider achetés"),
+    cl&&listItems.length===0&&h("div",{style:{textAlign:"center",padding:24,color:T.ts}},"📝 Va dans le Catalogue !"),
+    history.length>0&&h("div",{style:{...s.card,marginTop:10}},h("div",{style:{fontWeight:700,fontSize:13,marginBottom:4}},"🕐 Historique"),history.slice(0,5).map(hh=>h("div",{key:hh.id,style:{fontSize:12,padding:"3px 0",borderBottom:"1px solid "+T.border}},hh.date+" — "+(hh.name||"")+" ("+hh.count+")"))))};
+
+// ═══ PLANNING ═══
+const planningTab=()=>{const days=["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"],meals=["Midi","Soir"];
+  return h("div",{style:{padding:"10px 14px 20px"}},
+    h("h3",{style:{margin:"0 0 10px",fontSize:15}},"📅 Planning repas"),
+    days.map(d=>h("div",{key:d,style:s.card},h("div",{style:{fontWeight:700,fontSize:13,color:T.accent,marginBottom:4}},d),
+      meals.map(m=>h("div",{key:m,style:{display:"flex",alignItems:"center",gap:6,marginBottom:3}},h("span",{style:{fontSize:12,width:30,color:T.ts}},m),
+        h("select",{style:{...s.inp,fontSize:12,padding:5},value:planning[d+"_"+m]||"",onChange:e=>setPlanning(p=>({...p,[d+"_"+m]:e.target.value}))},h("option",{value:""},"—"),allR.map(r=>h("option",{key:r.name,value:r.name},r.emoji+" "+r.name))))))),
+    h("button",{style:{...s.btn(T.accent),width:"100%",marginTop:8},onClick:()=>{if(!cl)return;let nI=[...items],a=0;days.forEach(d=>meals.forEach(m=>{const rn=planning[d+"_"+m];if(!rn)return;const r=allR.find(x=>x.name===rn);if(!r)return;r.ingredients.forEach(ig=>{if(!nI.find(i=>i.lid===cl.id&&i.name.toLowerCase()===ig.n.toLowerCase())){a++;const cat=Object.entries(PDB).find(([_,ps])=>ps.some(p=>p.toLowerCase()===ig.n.toLowerCase()))?.[0]||"epicerie";nI.push({id:uid(),name:ig.n,cat,qty:ig.q,note:"Planning",pri:"normal",bought:false,lid:cl.id,at:Date.now()})}})}));persist(nI);notify("📅 "+a+" ajoutés !")}},"🛒 Générer la liste"),
+    h("button",{style:{...s.btn(T.iBg,T.text),width:"100%",marginTop:6,fontSize:12},onClick:()=>{setPlanning({});notify("Vidé")}},"Vider"))};
+
+// ═══ SETTINGS ═══
+const settingsTab=()=>h("div",{style:{padding:"10px 14px 20px"}},
+  h("h3",{style:{margin:"0 0 10px",fontSize:15}},"⚙️ Paramètres"),
+  h("div",{style:{...s.card,display:"flex",justifyContent:"space-between",alignItems:"center"}},h("span",{style:{fontWeight:600,fontSize:13}},dark?"🌙 Sombre":"☀️ Clair"),h("button",{onClick:()=>setDark(!dark),style:{...s.btn(dark?"#FFA726":"#1A1A2E","#FFF"),padding:"5px 14px",fontSize:12}},dark?"Clair":"Sombre")),
+  h("div",{style:{...s.card,marginTop:6}},h("div",{style:{fontWeight:700,fontSize:13,marginBottom:6}},"🤖 Clé Gemini"),h("a",{href:"https://aistudio.google.com/apikey",target:"_blank",style:{fontSize:11,color:T.accent}},"→ Clé gratuite"),
+    h("div",{style:{display:"flex",gap:6,marginTop:6}},h("input",{style:{...s.inp,flex:1,fontSize:12},type:showKey?"text":"password",placeholder:"Clé...",value:apiKey,onChange:e=>setApiKey(e.target.value)}),h("button",{onClick:()=>setShowKey(!showKey),style:{...s.btn(T.iBg,T.text),fontSize:11,padding:"5px 8px"}},showKey?"🙈":"👁️")),apiKey&&h("div",{style:{fontSize:11,color:"#4CAF50",marginTop:4}},"✓ OK")),
+  memory.length>0&&h("div",{style:{...s.card,marginTop:6}},h("div",{style:{fontWeight:700,fontSize:13,marginBottom:4}},"🧠 Mémoire ("+memory.length+")"),memory.map((m,i)=>h("div",{key:i,style:{fontSize:11,padding:"2px 0",display:"flex",justifyContent:"space-between"}},h("span",null,m.slice(0,50)),h("button",{onClick:()=>saveMem(memory.filter((_,j)=>j!==i)),style:{background:"none",border:"none",color:"#E53935",cursor:"pointer",fontSize:11}},"✕"))),h("button",{onClick:()=>saveMem([]),style:{...s.btn("#E53935"),width:"100%",marginTop:4,fontSize:11}},"Effacer")),
+  h("div",{style:{...s.card,marginTop:6}},h("div",{style:{fontWeight:700,fontSize:13,marginBottom:6}},"👤 Profils"),
+    profiles.map(p=>h("div",{key:p.id,style:{padding:"6px 0",borderBottom:"1px solid "+T.border}},
+      h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center"}},
+        h("div",{style:{display:"flex",alignItems:"center",gap:6}},h("span",{style:{fontSize:18}},p.avatar||"😎"),h("span",{style:{fontWeight:cp.id===p.id?700:400,color:cp.id===p.id?T.accent:T.text,fontSize:13}},p.name+(p.pin?" 🔒":"")+(cp.id===p.id?" ✓":""))),
+        h("div",{style:{display:"flex",gap:3}},
+          h("button",{onClick:()=>setEditProf(editProf===p.id?null:p.id),style:{...s.btn(T.iBg,T.text),padding:"2px 6px",fontSize:10}},"✏️"),
+          cp.id!==p.id&&h("button",{onClick:()=>{if(p.pin){setCp(null);setPinTarg(p)}else loginProfile(p)},style:{...s.btn(T.accent),padding:"2px 6px",fontSize:10}},"→"),
+          h("button",{onClick:()=>{if(!confirm("Supprimer "+p.name+" ?"))return;const np=profiles.filter(x=>x.id!==p.id);const pL=lists.filter(x=>x.pid===p.id).map(x=>x.id);persist(items.filter(x=>!pL.includes(x.lid)),lists.filter(x=>x.pid!==p.id),np);if(cp.id===p.id){setCp(null);setCl(null)}},style:{background:"none",border:"none",fontSize:12,cursor:"pointer",color:"#E53935"}},"🗑️"))),
+      editProf===p.id&&h("div",{style:{marginTop:6,padding:8,background:T.iBg,borderRadius:10}},
+        h("div",{style:{display:"flex",gap:4,marginBottom:4}},
+          h("input",{style:{...s.inp,flex:1,fontSize:12},placeholder:"Nom",defaultValue:p.name,onBlur:e=>{if(e.target.value.trim())persist(undefined,undefined,profiles.map(x=>x.id===p.id?{...x,name:e.target.value.trim()}:x))}}),
+          h("input",{style:{...s.inp,width:50,fontSize:12},placeholder:"PIN",type:"password",maxLength:4,defaultValue:p.pin,onBlur:e=>persist(undefined,undefined,profiles.map(x=>x.id===p.id?{...x,pin:e.target.value.replace(/\D/g,"")}:x))})),
+        h("div",{style:{display:"flex",gap:4,marginBottom:4}},
+          h("input",{style:{...s.inp,flex:1,fontSize:12},placeholder:"Nom Chef",defaultValue:p.chefName||"Chef Nutri",onBlur:e=>persist(undefined,undefined,profiles.map(x=>x.id===p.id?{...x,chefName:e.target.value.trim()||"Chef Nutri"}:x))}),
+          h("select",{style:{...s.inp,fontSize:12},defaultValue:p.chefStyle||"cool",onChange:e=>persist(undefined,undefined,profiles.map(x=>x.id===p.id?{...x,chefStyle:e.target.value}:x))},CHEF_STYLES.map(cs=>h("option",{key:cs.id,value:cs.id},cs.name)))),
+        h("div",{style:{fontSize:10,marginBottom:2}},"Avatar:"),
+        h("div",{style:{display:"flex",gap:3,flexWrap:"wrap",marginBottom:4}},AVATARS.map(a=>h("button",{key:a,onClick:()=>persist(undefined,undefined,profiles.map(x=>x.id===p.id?{...x,avatar:a}:x)),style:{fontSize:16,padding:2,border:p.avatar===a?"2px solid "+T.accent:"2px solid transparent",borderRadius:6,background:"none",cursor:"pointer"}},a))),
+        h("div",{style:{fontSize:10,marginBottom:2}},"Couleur:"),
+        h("div",{style:{display:"flex",gap:3,flexWrap:"wrap"}},ACCENT_COLORS.map(c=>h("button",{key:c,onClick:()=>persist(undefined,undefined,profiles.map(x=>x.id===p.id?{...x,color:c}:x)),style:{width:22,height:22,borderRadius:"50%",background:c,border:(p.color||"#FF6B35")===c?"3px solid "+T.text:"3px solid transparent",cursor:"pointer"}}))))
+    )),
+    h("div",{style:{display:"flex",gap:4,marginTop:8}},
+      h("input",{style:{...s.inp,flex:1},placeholder:"Prénom...",value:newName,onChange:e=>setNewName(e.target.value)}),
+      h("input",{style:{...s.inp,width:50},placeholder:"PIN",type:"password",maxLength:4,value:newPin,onChange:e=>setNewPin(e.target.value.replace(/\D/g,""))}),
+      h("button",{style:s.btn(T.accent),onClick:()=>{if(!newName.trim())return;const np={id:uid(),name:newName.trim(),pin:newPin||"",avatar:"😎",color:"#FF6B35",chefName:"Chef Nutri",chefStyle:"cool"};persist(undefined,[...lists,{id:uid(),pid:np.id,name:"Ma liste"}],[...profiles,np]);setNewName("");setNewPin("");notify("👤 Créé")}},"+"))),
+  h("button",{style:{...s.btn(T.iBg,T.text),width:"100%",marginTop:8,fontSize:12},onClick:()=>setShowTuto(true)},"📱 Tutoriel"),
+  h("button",{style:{...s.btn(T.iBg,T.text),width:"100%",marginTop:6,fontSize:12},onClick:()=>{setCp(null);setCl(null);setGuestMode(false)}},"🚪 Changer de profil"));
+
+// ═══ RECIPE MODAL ═══
+const recipeModal=()=>{if(!showRecipe)return null;const r=showRecipe,ratio=rServ/r.servings;
+  return h("div",{style:s.modal,onClick:()=>setShowRecipe(null)},h("div",{style:s.mCont,onClick:e=>e.stopPropagation()},
+    h("div",{style:{display:"flex",justifyContent:"space-between",marginBottom:10}},h("h3",{style:{margin:0,fontSize:16}},r.emoji+" "+r.name),h("button",{onClick:()=>setShowRecipe(null),style:{background:"none",border:"none",fontSize:20,cursor:"pointer",color:T.text}},"✕")),
+    // Rating
+    h("div",{style:{display:"flex",gap:2,marginBottom:8}},
+      [1,2,3,4,5].map(n=>h("button",{key:n,onClick:()=>setRatings(p=>({...p,[r.name]:n})),style:{background:"none",border:"none",fontSize:18,cursor:"pointer"}},n<=(ratings[r.name]||0)?"⭐":"☆"))),
+    // Portions
+    h("div",{style:{display:"flex",alignItems:"center",gap:8,marginBottom:10}},h("span",{style:{fontSize:13,color:T.ts}},"Portions:"),h("button",{style:s.btn(T.border,T.text),onClick:()=>setRServ(Math.max(1,rServ-1))},"−"),h("span",{style:{fontSize:18,fontWeight:700}},rServ),h("button",{style:s.btn(T.border,T.text),onClick:()=>setRServ(rServ+1)},"+")),
+    // Ingredients
+    h("div",{style:{fontWeight:700,fontSize:13,marginBottom:4}},"🧾 Ingrédients"),
+    r.ingredients.map((ig,i)=>h("div",{key:i,style:{padding:"5px 0",borderBottom:"1px solid "+T.border,display:"flex",justifyContent:"space-between",fontSize:13}},h("span",null,ig.n),h("span",{style:{color:T.ts}},Math.round(ig.q*ratio*10)/10+(ig.u?" "+ig.u:"")))),
+    // Steps
+    r.steps&&r.steps.length>0&&h("div",null,
+      h("div",{style:{fontWeight:700,fontSize:13,marginTop:10,marginBottom:4}},"👩‍🍳 Étapes"),
+      r.steps.map((st,i)=>h("div",{key:i,style:{padding:"5px 0",borderBottom:"1px solid "+T.border,fontSize:13}},h("span",{style:{fontWeight:700,color:T.accent}},(i+1)+". "),st))),
+    // Timer
+    h("div",{style:{display:"flex",gap:4,marginTop:10}},
+      [1,3,5,10,15,20,30].map(m=>h("button",{key:m,onClick:()=>startTimer(m),style:{...s.btn(T.iBg,T.text),fontSize:10,padding:"4px 8px"}},m+"min"))),
+    cl&&h("button",{style:{...s.btn(T.accent),width:"100%",marginTop:10},onClick:()=>{let a=0;const nI=[...items];r.ingredients.forEach(ig=>{if(!nI.find(i=>i.lid===cl.id&&i.name.toLowerCase()===ig.n.toLowerCase())){a++;const cat=Object.entries(PDB).find(([_,ps])=>ps.some(p=>p.toLowerCase()===ig.n.toLowerCase()))?.[0]||"epicerie";nI.push({id:uid(),name:ig.n,cat,qty:Math.round(ig.q*ratio*10)/10,note:"Recette",pri:"normal",bought:false,lid:cl.id,at:Date.now()})}});persist(nI);notify("🍳 "+a+" ajoutés !");setShowRecipe(null)}},"Ajouter à "+(cl?.name||""))))};
+
+// ═══ TUTO MODAL ═══
+const tutoModal=()=>showTuto?h("div",{style:s.modal,onClick:()=>setShowTuto(false)},h("div",{style:s.mCont,onClick:e=>e.stopPropagation()},
+  h("div",{style:{display:"flex",justifyContent:"space-between",marginBottom:10}},h("h3",{style:{margin:0}},"📱 Guide"),h("button",{onClick:()=>setShowTuto(false),style:{background:"none",border:"none",fontSize:20,cursor:"pointer",color:T.text}},"✕")),
+  h("div",{style:{fontSize:13,lineHeight:1.6}},
+    ["🏠 **Accueil** — Résumé, ajout rapide, J'ai faim, suggestions, saison","🏪 **Catalogue** — 966+ produits, ⭐ Perso, ✕ masquer, 🎤 recherche vocale","🍳 **Recettes** — Par repas (petit-déj/déjeuner/dîner/encas), ⭐ favoris, étapes, timer, noter","🧑‍🍳 **"+cn+"** — Coach nutrition & cuisine IA, mémoire, vocale, photo","📋 **Mes Listes** — Mode magasin 🏪, swipe, dupliquer, copier WhatsApp","📅 **Planning** — Repas semaine → générer liste auto","⚙️ **Paramètres** — Avatar, couleur, PIN, nom/style du chef"].map((l,i)=>{
+      const ps=l.split(/\*\*(.*?)\*\*/g);return h("p",{key:i,style:{margin:"6px 0"}},ps.map((p,j)=>j%2===1?h("strong",{key:j},p):p))})))):null;
+
+// ═══ FLOATING + BUTTON ═══
+const fab=()=>h("button",{onClick:()=>setShowQuickAdd(!showQuickAdd),style:{position:"fixed",bottom:78,right:16,width:48,height:48,borderRadius:"50%",background:"linear-gradient(135deg,"+T.accent+",#FF9800)",color:"#FFF",border:"none",fontSize:24,cursor:"pointer",boxShadow:"0 4px 16px rgba(255,107,53,.4)",zIndex:150,display:"flex",alignItems:"center",justifyContent:"center"}},"+");
+
+// ═══ MAIN RENDER ═══
+return h("div",{style:s.box},
+  h(Confetti,{active:confetti}),
+  notif&&h("div",{style:s.notif(notif.t)},notif.m),
+  tutoModal(),
+  // Header
+  h("div",{style:s.hdr},h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center"}},
+    h("div",{style:{display:"flex",alignItems:"center",gap:8}},h("span",{style:{fontSize:22}},cp?.avatar||"🛒"),h("div",null,h("div",{style:{fontWeight:900,fontSize:17}},"Mes Courses"),h("div",{style:{fontSize:11,color:T.ts}},cp.name+(cl?" • "+cl.name:"")))),
+    h("div",{style:{display:"flex",gap:6}},
+      timerLeft>0&&h("span",{style:{color:T.accent,fontWeight:900,fontSize:14}},fmtTime(timerLeft)),
+      h("button",{onClick:copyList,style:{background:"none",border:"none",fontSize:17,cursor:"pointer"}},"📋"),
+      h("button",{onClick:()=>setDark(!dark),style:{background:"none",border:"none",fontSize:17,cursor:"pointer"}},dark?"☀️":"🌙")))),
+  // Content
+  h("div",{style:{minHeight:"calc(100vh - 140px)"}},
+    tab==="home"&&homeTab(),tab==="catalogue"&&catalogueTab(),tab==="recipes"&&recipesTab(),
+    tab==="chat"&&chatTab(),tab==="listes"&&listesTab(),tab==="planning"&&planningTab(),tab==="settings"&&settingsTab()),
+  recipeModal(),
+  // FAB
+  tab!=="chat"&&fab(),
+  // Quick add overlay
+  showQuickAdd&&tab!=="home"&&h("div",{style:{position:"fixed",bottom:130,right:16,background:T.card,borderRadius:14,padding:14,boxShadow:"0 4px 24px rgba(0,0,0,.2)",zIndex:151,width:280}},
+    h("div",{style:{fontSize:12,color:T.ts,marginBottom:4}},"Produits séparés par virgules:"),
+    h("div",{style:{display:"flex",gap:4}},h("input",{style:{...s.inp,flex:1,fontSize:13},placeholder:"Lait, œufs, pain...",value:quickAdd,onChange:e=>setQuickAdd(e.target.value),autoFocus:true,onKeyDown:e=>{if(e.key==="Enter")doQuickAdd()}}),h("button",{style:s.btn(T.accent),onClick:doQuickAdd},"OK"))),
+  // ═══ BOTTOM NAV BAR (Instagram style) ═══
+  h("div",{className:"bottomNav"+(dark?" dark":"")},
+    [{id:"home",icon:"🏠",label:"Accueil"},{id:"catalogue",icon:"🏪",label:"Catalogue"},{id:"recipes",icon:"🍳",label:"Recettes"},{id:"chat",icon:"🧑‍🍳",label:cn.split(" ")[1]||"Chef"},{id:"listes",icon:"📋",label:"Listes",badge:remainCount||0},{id:"planning",icon:"📅",label:"Planning"},{id:"settings",icon:"⚙️",label:"Réglages"}].map(t=>
+      h("button",{key:t.id,className:"navBtn"+(tab===t.id?" active":""),onClick:()=>setTab(t.id)},
+        h("div",{className:"icon"},t.icon),
+        t.badge>0&&h("span",{className:"navBadge"},t.badge),
+        h("div",{className:"label",style:{color:tab===t.id?T.accent:undefined}},t.label),
+        h("div",{className:"dot",style:{background:T.accent}}))))
+);
+}
+ReactDOM.createRoot(document.getElementById("root")).render(h(App));
+</script></body></html>
